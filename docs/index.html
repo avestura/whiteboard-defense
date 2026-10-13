@@ -8,6 +8,7 @@
 <meta property="og:title" content="Whiteboard Defense">
 <meta property="og:description" content="Know what your AI agent built, and where it just used its defaults.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="demo.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Permanent+Marker&display=swap" rel="stylesheet">
@@ -198,6 +199,64 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
     </div>
   </section>
 
+  <section aria-labelledby="claude">
+    <h2 id="claude">What it looks like in Claude Code</h2>
+    <p>In Claude Code the plugin also draws in the interface: a band above the prompt, a brief pane, an entry in the status line, and briefs that start on their own once enough code has changed. These are working replicas built in HTML. Press the buttons.</p>
+    <div class="demos">
+      <div class="demo-cap">
+        <div>
+          <div class="term" id="demo-auto">
+            <div class="term-bar">
+              <span class="dots" aria-hidden="true">●●●</span>
+              <span class="title">claude · ~/billing-api</span>
+              <div class="term-ctl">
+                <span class="seg" role="group" aria-label="Plugin interface"><button type="button" data-mode="rich" aria-pressed="true">rich</button><button type="button" data-mode="prompt" aria-pressed="false">prompt</button></span>
+                <button type="button" data-act="replay">replay</button>
+              </div>
+            </div>
+            <div class="term-main">
+              <div class="transcript" aria-live="polite"></div>
+              <aside class="pane" hidden aria-label="Whiteboard brief pane">
+                <div class="pane-head"><span>Whiteboard brief</span><button type="button" class="tbtn" data-act="close" aria-label="Close pane">×</button></div>
+                <div class="pane-body"></div>
+              </aside>
+            </div>
+            <div class="band" hidden></div>
+            <div class="promptbox"><span aria-hidden="true">&gt;</span><span class="typed"></span><span class="cursor" aria-hidden="true">&nbsp;</span></div>
+            <div class="statusline"><span>Opus 5.5 · ~/billing-api · main</span><span class="wb"></span></div>
+            <div class="toast" role="status"></div>
+          </div>
+          <p class="demo-foot">Adapted from a real run of the plugin. Switch to <b>prompt</b> to see the plain skill with no interface changes (<code>/whiteboard-ui prompt</code>).</p>
+        </div>
+        <div class="note">
+          the turn ends, the plugin counts <b>48 changed lines</b> and asks for a brief by itself.
+          <br><br>then try <b>[ Open ]</b> and the copy buttons in the pane.
+        </div>
+      </div>
+
+      <div class="demo-cap">
+        <div>
+          <div class="term" id="demo-quiz">
+            <div class="term-bar">
+              <span class="dots" aria-hidden="true">●●●</span>
+              <span class="title">claude · ~/billing-api · quiz</span>
+              <div class="term-ctl"><button type="button" data-act="replay">replay</button></div>
+            </div>
+            <div class="term-main"><div class="transcript" aria-live="polite"></div></div>
+            <div class="band" hidden></div>
+            <div class="promptbox"><span aria-hidden="true">&gt;</span><span class="typed"></span><span class="cursor" aria-hidden="true">&nbsp;</span></div>
+            <div class="statusline"><span>Opus 5.5 · ~/billing-api · main</span><span class="wb"></span></div>
+            <div class="toast" role="status"></div>
+          </div>
+          <p class="demo-foot">Quiz mode works in every agent. Here the answers are scripted; in a real session the agent grades your own words against the code.</p>
+        </div>
+        <div class="note">
+          pick an answer. a wrong one gets <b>corrected</b>, not just marked.
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section aria-labelledby="defaults">
     <h2 id="defaults">Where agents lean on their defaults</h2>
     <p>Telling a model to &ldquo;avoid a generic look&rdquo; mostly swaps one default for another. Naming the specific pattern works much better. The catalogue ships with entries like these and grows through pull requests.</p>
@@ -216,6 +275,7 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
     <h2 id="use">Using it</h2>
     <dl class="cmds">
       <dt>automatic</dt><dd>A 15-line digest after each substantial task. Turn it off with one sentence or <code>"auto": "off"</code>.</dd>
+      <dt>/whiteboard-ui prompt</dt><dd>Claude Code only: turn the band, pane and status entry off and keep the plain skill. <code>/whiteboard-ui rich</code> brings them back.</dd>
       <dt>/whiteboard</dt><dd>The full brief for the current work.</dd>
       <dt>/whiteboard full 142</dt><dd>A brief for a PR, branch, or path that already exists.</dd>
       <dt>/whiteboard defaults</dt><dd>Only the defaults, each with an <code>Avoid:</code> line to paste into your next prompt.</dd>
@@ -231,7 +291,7 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
       <p><span class="x">x</span>It can&rsquo;t read its own weights. <b>DEFAULT</b> means &ldquo;you didn&rsquo;t specify it and it matches a habitual pattern&rdquo;, not &ldquo;proven bias&rdquo;.</p>
       <p><span class="x">x</span>The &ldquo;why&rdquo; is reconstructed from the conversation and the diff. Usually right, sometimes wrong. Shaky ones are tagged <b>GUESS</b>.</p>
       <p><span class="x">x</span>It doesn&rsquo;t replace reading the code that matters. It tells you where to look.</p>
-      <p><span class="x">x</span>Automatic briefs depend on the agent honouring the skill. If one is skipped, run it by hand.</p>
+      <p><span class="x">x</span>In Codex, OpenCode and Claude Code&rsquo;s prompt mode, automatic briefs depend on the agent honouring the skill. If one is skipped, run it by hand. Claude Code&rsquo;s rich UI triggers them from the plugin instead.</p>
     </div>
   </section>
 
@@ -275,5 +335,6 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
     setTimeout(() => btn.textContent = 'copy', 1600);
   }));
 </script>
+<script src="demo.js" defer></script>
 </body>
 </html>
