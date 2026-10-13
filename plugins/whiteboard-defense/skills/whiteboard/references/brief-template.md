@@ -22,6 +22,8 @@
 |---|---|---|---|---|
 | <area> | <what was chosen> | [USER] / [INFERRED] / [DEFAULT] / [GUESS], plus catalogue ID if matched | <the realistic alternative> | <consequence if wrong> |
 
+Checked and ruled out: <catalogue IDs considered and not relied on, with a reason each; omit the line if none>
+
 Provenance key: **[USER]** you asked or approved. **[INFERRED]** context made it the clear choice (evidence named). **[DEFAULT]** unspecified, not forced, the agent's habitual pick. **[GUESS]** the agent was unsure.
 
 ## Defaults I relied on

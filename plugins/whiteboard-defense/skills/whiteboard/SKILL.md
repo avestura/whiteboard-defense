@@ -108,7 +108,8 @@ The catalogue index below lists every known default pattern. Do this before writ
    - **[DEFAULT] or [GUESS]** (you chose it): cite the ID in the Decisions table, in "Defaults I relied on", in the short digest's "Relied on defaults" line, and in the report tool's `defaults[].id` and `decisions[].id`.
    - **[USER]** (the user explicitly asked for exactly this, such as "return every customer" for an unbounded list): cite the ID in the Decisions table only, as "known pattern D-XXX-NN, your call", and in `decisions[].id`. Do **not** list it under "Defaults I relied on", in "Relied on defaults", or in `defaults[]`: you did not rely on a default, the user decided. If the user's request only *allowed* the pattern without asking for it, it is still [DEFAULT].
 4. For matches, read the full entry in `references/defaults-catalogue.md` for its alternatives and `Avoid:` line. Read the file once; do not guess the text.
-5. Before finishing, re-check each [DEFAULT] and [GUESS] item that has no ID against the index once more. Only then write "not in catalogue". Writing "no catalogue IDs matched" without doing step 2 is a failure of this skill.
+5. If you considered an entry and ruled it out (the work avoids the pattern, or the user asked for the opposite), say so in one line directly under the Decisions table: `Checked and ruled out: D-ARCH-03 (state is in Redis, as asked).` Never mention ruled-out IDs inside "Defaults I relied on": that section lists only defaults the work actually relies on.
+6. Before finishing, re-check each [DEFAULT] and [GUESS] item that has no ID against the index once more. Only then write "not in catalogue". Writing "no catalogue IDs matched" without doing step 2 is a failure of this skill.
 
 The catalogue is a prompt for your own honesty, not a list to recite: report only entries that apply to this work. Also report defaults that are **not** in it; the catalogue is incomplete by design.
 

@@ -102,6 +102,37 @@ function score(s, report) {
   return { pass: problems.length === 0, problems, flagged: [...flagged], user: [...user] }
 }
 
+// The text of one "## <heading>" section of a brief, up to the next "## ".
+function section(md, heading) {
+  const lines = md.split('\n')
+  const start = lines.findIndex(l => l.trim().toLowerCase().startsWith(`## ${heading.toLowerCase()}`))
+  if (start === -1) return null
+  const end = lines.findIndex((l, i) => i > start && l.startsWith('## '))
+  return lines.slice(start + 1, end === -1 ? undefined : end).join('\n')
+}
+
+// Scores the saved brief, the file the user reads, the same way as the report.
+function scoreFile(s, cwd) {
+  const dir = join(cwd, '.whiteboard')
+  const files = existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.md') && !f.startsWith('quiz')).sort() : []
+  if (files.length === 0) return { file: null, problems: ['no brief file saved in .whiteboard/'] }
+  const file = join(dir, files[files.length - 1])
+  const md = readFileSync(file, 'utf8')
+  const defaults = section(md, 'Defaults I relied on')
+  const decisions = section(md, 'Decisions')
+  const problems = []
+  if (defaults === null) problems.push('brief file has no "Defaults I relied on" section')
+  if (decisions === null) problems.push('brief file has no "Decisions" section')
+  const has = (text, id) => text !== null && text.includes(id)
+  for (const id of s.expectDefaults ?? []) if (!has(defaults, id)) problems.push(`file: ${id} missing from defaults`)
+  for (const id of s.expectUser ?? []) {
+    if (!has(decisions, id)) problems.push(`file: ${id} missing from decisions`)
+    if (has(defaults, id)) problems.push(`file: user-requested ${id} listed as a default`)
+  }
+  for (const id of s.forbidDefaults ?? []) if (has(defaults, id)) problems.push(`file: ${id} wrongly listed as a default`)
+  return { file, problems }
+}
+
 async function runOne(s, i) {
   const cwd = mkdtempSync(join(tmpdir(), `wbd-eval-${s.name}-`))
   if (s.mode === 'fixture') cpSync(join(s.dir, 'files'), cwd, { recursive: true })
@@ -110,7 +141,11 @@ async function runOne(s, i) {
   const { code, out, err } = await runClaude(cwd, s.mode === 'live' ? s.prompt : fixturePrompt(s.request))
   const report = lastReport(out)
   const result = { scenario: s.name, run: i + 1, code, seconds: Math.round((Date.now() - started) / 1000), cwd, ...score(s, report), report }
+  const saved = scoreFile(s, cwd)
+  result.briefFile = saved.file
+  result.problems.push(...saved.problems)
   if (code !== 0) result.problems.push(`claude exited ${code}: ${err.trim().split('\n').pop() ?? ''}`)
+  result.pass = result.problems.length === 0
   const mark = result.pass ? 'PASS' : 'FAIL'
   console.log(`${mark}  ${s.name} #${i + 1} (${result.seconds}s)  flagged: ${result.flagged.join(', ') || '-'}${result.problems.length ? '  ' + result.problems.join('; ') : ''}`)
   return result

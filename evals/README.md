@@ -2,7 +2,10 @@
 
 Regression tests for the part of the skill that is easiest to get quietly wrong: matching the work against the defaults catalogue, and tagging who made each choice.
 
-Each scenario runs a real headless Claude Code session with the plugin loaded from this checkout and scores the brief the skill hands to the plugin's `report` tool.
+Each scenario runs a real headless Claude Code session with the plugin loaded from this checkout and scores the brief twice:
+
+- **the report**: what the skill hands to the plugin's `report` tool (IDs on `defaults[]` and on decisions, with their provenance);
+- **the saved file**: the brief in `.whiteboard/`, the one a person reads. Expected defaults must appear under "Defaults I relied on"; user-requested IDs must appear under "Decisions" and not under defaults; forbidden IDs must not appear under defaults at all, not even as "not a default" (ruled-out checks belong on the "Checked and ruled out" line).
 
 ```sh
 node evals/run.mjs                          # every scenario once
