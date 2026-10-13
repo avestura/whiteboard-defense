@@ -20,7 +20,7 @@
 
 | Decision | Choice | Provenance | Alternative not taken | Why it matters |
 |---|---|---|---|---|
-| <area> | <what was chosen> | [USER] / [INFERRED] / [DEFAULT] / [GUESS] | <the realistic alternative> | <consequence if wrong> |
+| <area> | <what was chosen> | [USER] / [INFERRED] / [DEFAULT] / [GUESS], plus catalogue ID if matched | <the realistic alternative> | <consequence if wrong> |
 
 Provenance key: **[USER]** you asked or approved. **[INFERRED]** context made it the clear choice (evidence named). **[DEFAULT]** unspecified, not forced, the agent's habitual pick. **[GUESS]** the agent was unsure.
 

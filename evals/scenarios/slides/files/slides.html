@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Q3 Results</title>
+<style>
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #0f172a; color: #f8fafc; }
+  section { display: none; height: 100vh; place-content: center; text-align: center; }
+  section.on { display: grid; }
+  h1 { font-size: 4rem; }
+  .notes { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 1rem; }
+  body.show-notes .notes { display: block; }
+  #bar { position: fixed; bottom: 0; left: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #3b82f6); }
+</style></head>
+<body>
+<section class="on"><h1>Q3 Results</h1><p>Quarterly review</p><aside class="notes">Welcome everyone.</aside></section>
+<section><h1>Agenda</h1><ul><li>Revenue</li><li>Churn</li><li>Customers</li><li>Next steps</li></ul></section>
+<section><h1>Revenue +12%</h1><aside class="notes">Driven by enterprise upgrades.</aside></section>
+<section><h1>Churn down to 3%</h1></section>
+<section><h1>2 new enterprise customers</h1></section>
+<section><h1>Thank you!</h1><p>Questions?</p></section>
+<div id="bar"></div>
+<script>
+  const slides = [...document.querySelectorAll('section')]
+  let i = 0
+  const show = n => {
+    slides[i].classList.remove('on')
+    i = Math.max(0, Math.min(slides.length - 1, n))
+    slides[i].classList.add('on')
+    document.getElementById('bar').style.width = ((i + 1) / slides.length * 100) + '%'
+  }
+  document.addEventListener('click', () => show(i + 1))
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') show(i + 1)
+    if (e.key === 'ArrowLeft') show(i - 1)
+    if (e.key === 'n') document.body.classList.toggle('show-notes')
+    if (e.key === 'f') document.documentElement.requestFullscreen()
+  })
+  show(0)
+</script>
+</body></html>

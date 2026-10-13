@@ -11,7 +11,8 @@ The most useful contribution is a new entry in the defaults catalogue: `plugins/
    - **Alternatives**: two or three real options.
    - **Avoid line**: a paste-ready exclusion, if it is a creative default.
 3. Regenerate the index the skill reads: `node scripts/catalogue-index.mjs`. CI fails if `SKILL.md`'s index is out of date.
-4. Say which agent and model version you saw it on, in the PR description. Defaults change between versions, and entries that no longer hold should be removed.
+4. Add an eval scenario that plants the pattern (see [evals/README.md](evals/README.md)) and check it passes: `node evals/run.mjs --only <name>`.
+5. Say which agent and model version you saw it on, in the PR description. Defaults change between versions, and entries that no longer hold should be removed.
 
 Write the **Trigger** broadly enough to match real work. The agent matches by meaning, but a trigger like "a prototype becoming a service" was too narrow to catch an in-memory rate limiter.
 
@@ -23,7 +24,7 @@ Rules:
 
 ## Changing the skill
 
-`SKILL.md` is the product. Keep the provenance tags and the "Not verified" section; the rest is negotiable. If you change behavior, update `examples/sample-brief.md` and the README table.
+`SKILL.md` is the product. Keep the provenance tags and the "Not verified" section; the rest is negotiable. Run `node evals/run.mjs` before and after a change to the skill and compare: it costs real model calls, so it is not part of CI. If you change behavior, update `examples/sample-brief.md` and the README table.
 
 ## Testing locally
 

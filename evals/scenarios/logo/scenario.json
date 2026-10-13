@@ -1,0 +1,6 @@
+{
+  "mode": "fixture",
+  "request": "Make a logo for Ledgerline, our accounting API. Save it as logo.svg.",
+  "expectDefaults": ["D-LOGO-01", "D-LOGO-02", "D-COLOR-01"],
+  "why": "A single-letter monogram in a rounded square, a dot accent, and a violet-to-blue gradient, none of which were requested."
+}

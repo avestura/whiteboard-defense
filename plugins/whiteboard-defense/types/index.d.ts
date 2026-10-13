@@ -5,6 +5,8 @@ export type BriefDecision = {
   choice: string
   provenance: Provenance
   alternative?: string
+  /** Catalogue ID when the decision matches a known default pattern. */
+  id?: string
 }
 
 export type BriefDefault = {

@@ -1,0 +1,6 @@
+{
+  "mode": "fixture",
+  "request": "Make a local HTML presentation of our Q3 results: revenue up 12%, churn down to 3%, two new enterprise customers.",
+  "expectDefaults": ["D-SLIDES-01", "D-SLIDES-02"],
+  "why": "Click/arrow navigation, N for notes, a progress bar, an agenda slide, and a 'Thank you / Questions?' close, none requested."
+}

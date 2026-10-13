@@ -16,7 +16,7 @@ const REPORTED = {
   tier: 'customer-facing',
   decisions: [
     { decision: 'Credential', choice: 'Bearer token', provenance: 'USER' },
-    { decision: 'Revocation', choice: 'None', provenance: 'DEFAULT', alternative: 'Delete endpoint' },
+    { decision: 'Revocation', choice: 'None', provenance: 'DEFAULT', alternative: 'Delete endpoint', id: 'D-SCOPE-02' },
     { decision: 'Expiry', choice: '7 days', provenance: 'guess' },
     { decision: 'Broken row', provenance: 'USER' },
   ],
@@ -30,6 +30,8 @@ describe('parsing', () => {
     if (typeof b === 'string') throw new Error(b)
     expect(b.decisions.map(d => d.provenance)).toEqual(['USER', 'DEFAULT', 'GUESS'])
     expect(b.defaults[0]?.id).toBe('D-SCOPE-02')
+    expect(b.decisions[1]?.id).toBe('D-SCOPE-02')
+    expect(b.decisions[0]?.id).toBeUndefined()
   })
 
   test('toBrief rejects a brief with no title', () => {

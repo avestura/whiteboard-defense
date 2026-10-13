@@ -51,7 +51,7 @@ export function toBrief(input: Record<string, unknown>): Brief | string {
     const choice = str(r.choice)
     const provenance = typeof r.provenance === 'string' ? r.provenance.toUpperCase() : ''
     if (decision === undefined || choice === undefined || !isProvenance(provenance)) continue
-    decisions.push({ decision, choice, provenance, alternative: str(r.alternative) })
+    decisions.push({ decision, choice, provenance, alternative: str(r.alternative), id: str(r.id) })
   }
   const rawDefaults = Array.isArray(input.defaults) ? input.defaults : []
   const defaults = rawDefaults.flatMap(row => {
@@ -140,6 +140,7 @@ export const register: Register = (on, options) => {
                   choice: { type: 'string' },
                   provenance: { type: 'string', enum: ['USER', 'INFERRED', 'DEFAULT', 'GUESS'] },
                   alternative: { type: 'string' },
+                  id: { type: 'string', description: 'Catalogue ID when this decision matches one, whatever its provenance' },
                 },
               },
             },
@@ -280,6 +281,7 @@ export const register: Register = (on, options) => {
           {b.decisions.map(d => (
             <Text>
               <Text color={TAG_COLOR[d.provenance]}>[{d.provenance}]</Text> {d.decision}: {d.choice}
+              {d.id !== undefined ? <Text dimColor> {d.id}</Text> : null}
               {d.alternative !== undefined ? <Text dimColor> (not: {d.alternative})</Text> : null}
             </Text>
           ))}

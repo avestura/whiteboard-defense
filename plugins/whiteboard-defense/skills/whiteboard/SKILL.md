@@ -34,7 +34,7 @@ When the tool `mcp__whiteboard-defense__report` is available, the Whiteboard Def
 
 - **Do not start automatic briefs yourself.** The plugin counts changed lines and asks for a short brief at the end of a turn when it is due. Its request says it was "triggered automatically by the whiteboard-defense plugin".
 - **When the plugin asks**, apply Tiering and "Substantial" as usual. If the work does not qualify, reply in one line and do not call the tool.
-- **After every brief you produce** (short or full, automatic or invoked), call `mcp__whiteboard-defense__report` once with the same content: title, tier, saved file path, the Decisions table rows with their provenance tags, the "Defaults I relied on" items with catalogue IDs and `Avoid:` lines, the weakest point, and the hardest question. Write the file first so the path is real.
+- **After every brief you produce** (short or full, automatic or invoked), call `mcp__whiteboard-defense__report` once with the same content: title, tier, saved file path, the Decisions table rows with their provenance tags and catalogue IDs, the "Defaults I relied on" items with catalogue IDs and `Avoid:` lines, the weakest point, and the hardest question. Write the file first so the path is real.
 - Keep the chat digest as specified; the pane holds the detail, so do not paste the decisions table twice.
 
 When the tool is not available (Codex, OpenCode, or Claude Code with the UI set to `prompt`), ignore this section.
@@ -104,7 +104,9 @@ The catalogue index below lists every known default pattern. Do this before writ
 
 1. List the decisions the work contains, including ones you made without noticing (where state lives, how errors are handled, what was left out).
 2. Compare **every** decision against **every** index entry by meaning, not wording. The work rarely uses the entry's words: `except Exception: log; return None` is D-ERR-01; a list endpoint with no limit is D-DATA-01; a token kept in `localStorage` is D-SEC-02.
-3. Each match is a decision you must tag [DEFAULT] or [GUESS] (unless the user asked for it, which makes it [USER]) and cite by ID in the Decisions table, in "Defaults I relied on", in the short digest's "Relied on defaults" line, and in the report tool's `id` field.
+3. Tag each match by who chose it, then cite its ID where that tag belongs:
+   - **[DEFAULT] or [GUESS]** (you chose it): cite the ID in the Decisions table, in "Defaults I relied on", in the short digest's "Relied on defaults" line, and in the report tool's `defaults[].id` and `decisions[].id`.
+   - **[USER]** (the user explicitly asked for exactly this, such as "return every customer" for an unbounded list): cite the ID in the Decisions table only, as "known pattern D-XXX-NN, your call", and in `decisions[].id`. Do **not** list it under "Defaults I relied on", in "Relied on defaults", or in `defaults[]`: you did not rely on a default, the user decided. If the user's request only *allowed* the pattern without asking for it, it is still [DEFAULT].
 4. For matches, read the full entry in `references/defaults-catalogue.md` for its alternatives and `Avoid:` line. Read the file once; do not guess the text.
 5. Before finishing, re-check each [DEFAULT] and [GUESS] item that has no ID against the index once more. Only then write "not in catalogue". Writing "no catalogue IDs matched" without doing step 2 is a failure of this skill.
 
@@ -173,8 +175,8 @@ Use `references/brief-template.md` as the skeleton. The sections, in order:
 1. **Header**: what was built, tier (customer-facing / PoC / unclear, and why you think so), date.
 2. **The 60-second version**: three to five sentences. What it is, how it works at the level you would say aloud at a whiteboard, and the one decision most worth defending.
 3. **How it works**: the mental model. A small ASCII diagram if it helps (components and the direction data flows). Name the main data structures and why they were chosen.
-4. **Decisions**: a table. Columns: Decision, Choice, Provenance tag, Alternative not taken, Why it matters. Order by consequence, not by the order you made them. Aim for 5-12 rows; do not pad.
-5. **Defaults I relied on**: only [DEFAULT] and [GUESS] items, each with the catalogue ID if any, the alternatives, and the paste-ready exclusion line. If there are none, say so and explain why you believe that. Do not leave this section out.
+4. **Decisions**: a table. Columns: Decision, Choice, Provenance tag (with the catalogue ID when one matched), Alternative not taken, Why it matters. Order by consequence, not by the order you made them. Aim for 5-12 rows; do not pad.
+5. **Defaults I relied on**: only [DEFAULT] and [GUESS] items, never [USER] ones even when they match the catalogue, each with the catalogue ID if any, the alternatives, and the paste-ready exclusion line. If there are none, say so and explain why you believe that. Do not leave this section out.
 6. **Where it fails**: concrete failure modes with triggers. Include scale limits, partial failures, bad input, and concurrency.
 7. **If someone malicious is involved**: what each untrusted party (user, other tenant, network attacker, compromised dependency) can do. If you did not analyze a party, say that.
 8. **Defend it**: four to six questions a skeptical reviewer would ask, each with a two-to-three sentence answer the user could give. At least one must be a "why X instead of Y" and one a "where does this fail".

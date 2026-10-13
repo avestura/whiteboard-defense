@@ -1,0 +1,6 @@
+{
+  "mode": "fixture",
+  "request": "Add login to our React app using our existing POST /api/login endpoint, which returns { token }.",
+  "expectDefaults": ["D-SEC-02"],
+  "why": "The session token is kept in localStorage and attached by hand, a session scheme nobody chose."
+}

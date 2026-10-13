@@ -1,0 +1,6 @@
+{
+  "mode": "fixture",
+  "request": "Write a function that gets today's EUR to USD rate from https://api.rates.example/latest. Our checkout uses it to price orders.",
+  "expectDefaults": ["D-NET-01", "D-ERR-01"],
+  "why": "No timeout or retry budget on the network call; failures are logged and turned into None for the caller."
+}

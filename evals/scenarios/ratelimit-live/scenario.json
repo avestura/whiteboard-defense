@@ -1,0 +1,6 @@
+{
+  "mode": "live",
+  "prompt": "Write ratelimit.py: a token-bucket rate limiter class for an HTTP API used by customers, about 40 lines, with docstrings. Then stop.",
+  "expectDefaults": ["D-ARCH-03"],
+  "why": "The limiter keeps buckets in process memory, so each worker gets its own copy."
+}

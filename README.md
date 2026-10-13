@@ -143,6 +143,8 @@ plugins/whiteboard-defense/
     references/defaults-catalogue.md   known default patterns
     references/brief-template.md
 opencode/commands/whiteboard.md        OpenCode slash command
+evals/                                 catalogue-matching regression evals (real sessions)
+scripts/catalogue-index.mjs            regenerates the catalogue index inside SKILL.md
 install.sh, install.ps1                one-command installers
 docs/                                  GitHub Pages site
 ```

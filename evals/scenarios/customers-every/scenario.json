@@ -1,0 +1,8 @@
+{
+  "mode": "fixture",
+  "request": "Add GET /customers to app.py. It must return every customer, all of them in one response, for the internal dashboard.",
+  "expectDefaults": ["D-ERR-01"],
+  "expectUser": ["D-DATA-01"],
+  "forbidDefaults": ["D-DATA-01"],
+  "why": "The unbounded list was asked for (USER, not a default); the catch-log-return-empty handler was not."
+}
