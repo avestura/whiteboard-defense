@@ -10,7 +10,10 @@ The most useful contribution is a new entry in the defaults catalogue: `plugins/
    - **Default**: what agents commonly do, concretely. "Purple gradient" is useful; "bad design" is not.
    - **Alternatives**: two or three real options.
    - **Avoid line**: a paste-ready exclusion, if it is a creative default.
-3. Say which agent and model version you saw it on, in the PR description. Defaults change between versions, and entries that no longer hold should be removed.
+3. Regenerate the index the skill reads: `node scripts/catalogue-index.mjs`. CI fails if `SKILL.md`'s index is out of date.
+4. Say which agent and model version you saw it on, in the PR description. Defaults change between versions, and entries that no longer hold should be removed.
+
+Write the **Trigger** broadly enough to match real work. The agent matches by meaning, but a trigger like "a prototype becoming a service" was too narrow to catch an in-memory rate limiter.
 
 Rules:
 

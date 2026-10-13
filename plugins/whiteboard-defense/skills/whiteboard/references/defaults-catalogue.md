@@ -136,8 +136,8 @@ ID scheme: `D-<AREA>-<NN>`. To add one, see CONTRIBUTING.md.
 - **Alternatives**: concrete code until a second use appears.
 
 ### D-ARCH-03: Single-process, in-memory state
-- **Trigger**: a prototype becoming a service.
-- **Default**: state held in process memory or local files, so a restart or a second instance breaks behavior.
+- **Trigger**: any service code that keeps state between requests (counters, caches, sessions, queues, rate limits), or a prototype becoming a service.
+- **Default**: state held in process memory or local files, so a restart loses it and a second instance or worker gets its own copy.
 - **Alternatives**: external store, explicit persistence, idempotent operations.
 
 ---
