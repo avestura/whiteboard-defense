@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "whiteboard-defense",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "After substantial work, tells you what you should know to defend it at a whiteboard: the decisions, who made each one, and where the agent relied on its defaults.",
   "author": { "name": "avestura", "url": "https://github.com/avestura" },
   "homepage": "https://github.avestura.dev/whiteboard-defense/",
