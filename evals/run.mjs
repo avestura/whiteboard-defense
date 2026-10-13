@@ -9,6 +9,7 @@
 //                   a decision tagged DEFAULT or GUESS
 //   expectUser      IDs that must be cited on a decision tagged USER
 //   forbidDefaults  IDs that must NOT be flagged as a default
+//   forbidUser      IDs that must NOT be cited as a user choice ("known pattern, your call")
 //
 // Scenarios:  evals/scenarios/<name>/scenario.json  (+ files/ for fixtures)
 //   mode "fixture": files/ is copied into a fresh repo and the skill is asked
@@ -23,6 +24,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildTranscript } from './transcript.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
@@ -99,6 +101,7 @@ function score(s, report) {
   for (const id of s.expectDefaults ?? []) if (!flagged.has(id)) problems.push(`missed ${id}`)
   for (const id of s.expectUser ?? []) if (!user.has(id)) problems.push(`${id} not cited as USER`)
   for (const id of s.forbidDefaults ?? []) if (flagged.has(id)) problems.push(`wrongly flagged ${id}`)
+  for (const id of s.forbidUser ?? []) if (user.has(id)) problems.push(`${id} wrongly cited as USER`)
   return { pass: problems.length === 0, problems, flagged: [...flagged], user: [...user] }
 }
 
@@ -130,6 +133,10 @@ function scoreFile(s, cwd) {
     if (has(defaults, id)) problems.push(`file: user-requested ${id} listed as a default`)
   }
   for (const id of s.forbidDefaults ?? []) if (has(defaults, id)) problems.push(`file: ${id} wrongly listed as a default`)
+  for (const id of s.forbidUser ?? []) {
+    const cited = (decisions ?? '').split('\n').some(l => l.includes(id) && /your call|\[USER\]/i.test(l))
+    if (cited) problems.push(`file: ${id} wrongly cited as a user choice`)
+  }
   return { file, problems }
 }
 
@@ -138,13 +145,19 @@ async function runOne(s, i) {
   if (s.mode === 'fixture') cpSync(join(s.dir, 'files'), cwd, { recursive: true })
   spawnSync('git', ['init', '-q'], { cwd })
   const started = Date.now()
-  const { code, out, err } = await runClaude(cwd, s.mode === 'live' ? s.prompt : fixturePrompt(s.request))
+  const prompt = s.mode === 'live' ? s.prompt : fixturePrompt(s.request)
+  const { code, out, err } = await runClaude(cwd, prompt)
   const report = lastReport(out)
   const result = { scenario: s.name, run: i + 1, code, seconds: Math.round((Date.now() - started) / 1000), cwd, ...score(s, report), report }
-  const saved = scoreFile(s, cwd)
+  result.transcript = buildTranscript(out, { cwd, prompt }) // replayed by the site's demo (scripts/build-demo.mjs)
+  // Short digests (the live, automatic path) are never saved; only full briefs are.
+  const saved = s.mode === 'fixture' ? scoreFile(s, cwd) : { file: null, problems: [] }
   result.briefFile = saved.file
   result.problems.push(...saved.problems)
-  if (code !== 0) result.problems.push(`claude exited ${code}: ${err.trim().split('\n').pop() ?? ''}`)
+  if (/"type":"rate_limit_event"[^\n]*"status":"rejected"/.test(out)) {
+    result.problems.unshift('rate limited: the session never ran, so this is not a skill result; rerun later')
+    result.rateLimited = true
+  } else if (code !== 0) result.problems.push(`claude exited ${code}: ${err.trim().split('\n').pop() ?? ''}`)
   result.pass = result.problems.length === 0
   const mark = result.pass ? 'PASS' : 'FAIL'
   console.log(`${mark}  ${s.name} #${i + 1} (${result.seconds}s)  flagged: ${result.flagged.join(', ') || '-'}${result.problems.length ? '  ' + result.problems.join('; ') : ''}`)

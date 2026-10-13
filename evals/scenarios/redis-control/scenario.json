@@ -3,5 +3,6 @@
   "request": "Rewrite the rate limiter to keep its counters in Redis so all four gunicorn workers share one limit per API key.",
   "expectDefaults": [],
   "forbidDefaults": ["D-ARCH-03"],
-  "why": "Negative control: state is shared in Redis exactly as asked, so in-process state must not be flagged."
+  "forbidUser": ["D-ARCH-03"],
+  "why": "Negative control: state is shared in Redis exactly as asked, so in-process state must not be flagged, nor cited as a pattern the user chose: it was avoided, so it belongs on the ruled-out line."
 }

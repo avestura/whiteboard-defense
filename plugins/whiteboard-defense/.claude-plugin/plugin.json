@@ -19,8 +19,8 @@
     "auto": {
       "type": "string",
       "title": "Automatic brief",
-      "description": "Brief automatically after a turn that changed enough code. A project's .whiteboard/config.json overrides this.",
-      "options": ["short", "full", "off"],
+      "description": "Brief automatically after a turn that changed enough code. suggest only shows a Brief me button (no extra tokens). A project's .whiteboard/config.json overrides this.",
+      "options": ["short", "full", "suggest", "off"],
       "default": "short"
     },
     "autoThreshold": {

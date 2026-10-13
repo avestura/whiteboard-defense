@@ -20,11 +20,11 @@ Read the first word of the user's arguments, if any.
 
 | Invocation | Mode | Behavior |
 |---|---|---|
-| automatic (end of substantial task) | `short` | Chat-only digest, at most 15 lines. Writes the full file if config says so. |
+| automatic (end of substantial task) | `short` | Chat-only digest, at most 15 lines. Cheap by design: no file, no reference files read. |
 | `/whiteboard` or `$whiteboard` | `full` | Full brief for the current work. |
 | `full <target>` | `full` | Full brief for a target: a PR number, branch, commit range, or path. Read the diff yourself. |
 | `defaults` | `defaults` | Only the "Defaults I relied on" section. |
-| `quiz` | `quiz` | Interactive drill. See "Quiz mode". |
+| `quiz` | `quiz` | Interactive drill. Read `references/quiz.md`. |
 | `config` | `config` | Show or change preferences. See "Preferences". |
 | `ship` / `poc` | `tier` | Record whether the work is customer-facing or a PoC. See "Tiering". |
 
@@ -34,7 +34,7 @@ When the tool `mcp__whiteboard-defense__report` is available, the Whiteboard Def
 
 - **Do not start automatic briefs yourself.** The plugin counts changed lines and asks for a short brief at the end of a turn when it is due. Its request says it was "triggered automatically by the whiteboard-defense plugin".
 - **When the plugin asks**, apply Tiering and "Substantial" as usual. If the work does not qualify, reply in one line and do not call the tool.
-- **After every brief you produce** (short or full, automatic or invoked), call `mcp__whiteboard-defense__report` once with the same content: title, tier, saved file path, the Decisions table rows with their provenance tags and catalogue IDs, the "Defaults I relied on" items with catalogue IDs and `Avoid:` lines, the weakest point, and the hardest question. Write the file first so the path is real.
+- **After every brief you produce** (short or full, automatic or invoked), call `mcp__whiteboard-defense__report` once with the same content: title, tier, saved file path, the Decisions table rows with their provenance tags and catalogue IDs, the "Defaults I relied on" items with catalogue IDs and `Avoid:` lines, the weakest point, and the hardest question. In full mode write the file first so the path is real; in short mode omit the path.
 - Keep the chat digest as specified; the pane holds the detail, so do not paste the decisions table twice.
 
 When the tool is not available (Codex, OpenCode, or Claude Code with the UI set to `prompt`), ignore this section.
@@ -56,8 +56,8 @@ Read config before doing anything. Look in this order and use the first file fou
 }
 ```
 
-- `auto`: `"short"` (default), `"full"`, or `"off"`. When `"off"`, never produce a brief unless explicitly invoked.
-- `output`: `"both"` (default: summary in chat, full brief in a file), `"chat"`, or `"file"` (chat shows only a one-line pointer).
+- `auto`: `"short"` (default), `"full"`, `"suggest"` (Claude Code UI only: show a "Brief me" button instead of spending a turn), or `"off"`. When `"off"`, never produce a brief unless explicitly invoked.
+- `output` (full briefs only): `"both"` (default: summary in chat, full brief in a file), `"chat"`, or `"file"` (chat shows only a one-line pointer). Short digests are never saved.
 - `directory`: where briefs are saved. Default `.whiteboard`.
 - `minimumSize`: `"substantial"` (default) or `"any"`.
 
@@ -106,9 +106,11 @@ The catalogue index below lists every known default pattern. Do this before writ
 2. Compare **every** decision against **every** index entry by meaning, not wording. The work rarely uses the entry's words: `except Exception: log; return None` is D-ERR-01; a list endpoint with no limit is D-DATA-01; a token kept in `localStorage` is D-SEC-02.
 3. Tag each match by who chose it, then cite its ID where that tag belongs:
    - **[DEFAULT] or [GUESS]** (you chose it): cite the ID in the Decisions table, in "Defaults I relied on", in the short digest's "Relied on defaults" line, and in the report tool's `defaults[].id` and `decisions[].id`.
-   - **[USER]** (the user explicitly asked for exactly this, such as "return every customer" for an unbounded list): cite the ID in the Decisions table only, as "known pattern D-XXX-NN, your call", and in `decisions[].id`. Do **not** list it under "Defaults I relied on", in "Relied on defaults", or in `defaults[]`: you did not rely on a default, the user decided. If the user's request only *allowed* the pattern without asking for it, it is still [DEFAULT].
-4. For matches, read the full entry in `references/defaults-catalogue.md` for its alternatives and `Avoid:` line. Read the file once; do not guess the text.
-5. If you considered an entry and ruled it out (the work avoids the pattern, or the user asked for the opposite), say so in one line directly under the Decisions table: `Checked and ruled out: D-ARCH-03 (state is in Redis, as asked).` Never mention ruled-out IDs inside "Defaults I relied on": that section lists only defaults the work actually relies on.
+   - Match on the entry's **Pattern**, never on its topic. A decision about the same subject (where state lives, how errors are handled) is not a match unless it does what the Pattern describes. Test before citing: if the choice is one of the entry's **Alternatives** in `references/defaults-catalogue.md`, the work avoided the pattern, so it goes on the ruled-out line and nowhere else, whoever made the choice.
+   - **[USER]** (the user explicitly asked for exactly this, such as "use emoji for the icons" for D-UI-02): cite the ID in the Decisions table only, as "known pattern D-XXX-NN, your call", and in `decisions[].id`. Do **not** list it under "Defaults I relied on", in "Relied on defaults", or in `defaults[]`: you did not rely on a default, the user decided. If the user's request only *allowed* the pattern without asking for it, it is still [DEFAULT]. If the user asked for something that *avoids* the pattern (realistic seed data instead of placeholders for D-DATA-02, a plain descriptive name instead of a coined one for D-NAME-01), the entry did not match: put it on the ruled-out line, not in the Decisions table.
+   - An ID next to a decision, in the table or in `decisions[].id`, always means "this decision **is** that pattern". Never attach an ID to a decision that avoids, fixes or resolves a pattern, not even as a note; that belongs on the ruled-out line alone.
+4. In full mode only, read `references/defaults-catalogue.md` once for each match's alternatives and `Avoid:` line; do not guess the text. Short mode works from the index alone.
+5. If you considered an entry and ruled it out (the work avoids the pattern, or the user asked for the opposite), say so in one line directly under the Decisions table: `Checked and ruled out: D-DATA-02 (seed data uses real edge cases: long names, empty values, non-ASCII).` Never mention ruled-out IDs inside "Defaults I relied on": that section lists only defaults the work actually relies on.
 6. Before finishing, re-check each [DEFAULT] and [GUESS] item that has no ID against the index once more. Only then write "not in catalogue". Writing "no catalogue IDs matched" without doing step 2 is a failure of this skill.
 
 The catalogue is a prompt for your own honesty, not a list to recite: report only entries that apply to this work. Also report defaults that are **not** in it; the catalogue is incomplete by design.
@@ -137,7 +139,7 @@ The catalogue is a prompt for your own honesty, not a list to recite: report onl
 - **D-STACK-02** Reach for a framework or dependency. When: a small utility need. Pattern: add a package instead of writing 20 lines.
 - **D-ARCH-01** Layered folders. When: scaffolding a new project. Pattern: `src/components`, `src/utils`, `src/services`, `src/types` regardless of project size.
 - **D-ARCH-02** Premature abstraction. When: any feature with one implementation. Pattern: an interface, factory, or config layer "for future flexibility".
-- **D-ARCH-03** Single-process, in-memory state. When: any service code that keeps state between requests (counters, caches, sessions, queues, rate limits), or a prototype becoming a service. Pattern: state held in process memory or local files, so a restart loses it and a second instance or worker gets its own copy.
+- **D-ARCH-03** Single-process, in-memory state. When: any service code that keeps state between requests (counters, caches, sessions, queues), or a prototype becoming a service. Pattern: state held in process memory or local files, so a restart loses it and a second instance or worker gets its own copy.
 - **D-ERR-01** Catch, log, continue. When: any I/O or parsing. Pattern: a broad `try/catch` that logs and returns a default, hiding failures from callers.
 - **D-ERR-02** Optimistic input trust. When: request handlers, file parsers, CLI args. Pattern: validate shape lightly or not at all; assume well-formed, same-origin, non-hostile input.
 - **D-NET-01** No timeouts, no retry budget. When: any network call. Pattern: library default timeouts (often none) and either no retry or an unbounded one.
@@ -165,32 +167,9 @@ Categories to scan every time:
 - Copy and content: headlines, microcopy, README shape, commit style, example data
 - Scope: what you left out, what you added without being asked
 
-### Naming "styles you don't want"
-
-For each [DEFAULT] in a creative or design area, end with a ready-to-paste exclusion the user can add to their next prompt, for example: `Avoid: a single-letter monogram logo, a dot or underscore accent, gradient purple-to-blue backgrounds.` Specific patterns steer far better than "avoid generic".
-
 ## Output: full brief
 
-Use `references/brief-template.md` as the skeleton. The sections, in order:
-
-1. **Header**: what was built, tier (customer-facing / PoC / unclear, and why you think so), date.
-2. **The 60-second version**: three to five sentences. What it is, how it works at the level you would say aloud at a whiteboard, and the one decision most worth defending.
-3. **How it works**: the mental model. A small ASCII diagram if it helps (components and the direction data flows). Name the main data structures and why they were chosen.
-4. **Decisions**: a table. Columns: Decision, Choice, Provenance tag (with the catalogue ID when one matched), Alternative not taken, Why it matters. Order by consequence, not by the order you made them. Aim for 5-12 rows; do not pad.
-5. **Defaults I relied on**: only [DEFAULT] and [GUESS] items, never [USER] ones even when they match the catalogue, each with the catalogue ID if any, the alternatives, and the paste-ready exclusion line. If there are none, say so and explain why you believe that. Do not leave this section out.
-6. **Where it fails**: concrete failure modes with triggers. Include scale limits, partial failures, bad input, and concurrency.
-7. **If someone malicious is involved**: what each untrusted party (user, other tenant, network attacker, compromised dependency) can do. If you did not analyze a party, say that.
-8. **Defend it**: four to six questions a skeptical reviewer would ask, each with a two-to-three sentence answer the user could give. At least one must be a "why X instead of Y" and one a "where does this fail".
-9. **Not verified**: what you did not test or could not check. Be explicit; an untested path is something the user must not claim to understand.
-
-### Quality rules
-
-- Write for someone who did not watch you work and will read this once.
-- Prefer specific over general. "Chose SQLite because there is one writer and the dataset fits in memory" beats "Chose a simple database".
-- Do not praise the work. Do not hedge everything. Where you are uncertain, say it once, in the right place.
-- Keep the whole file under roughly 150 lines. Link to code with `path:line` rather than pasting it.
-- Do not claim a test passed unless you ran it.
-- Never omit an unflattering truth (a shortcut, a TODO, a known bug). Those are what the user most needs to know before being asked.
+For `full` and `defaults` modes, read `references/full-brief.md` (sections, quality rules, `Avoid:` lines, saving) and `references/brief-template.md`. Short mode needs neither.
 
 ## Output: short digest
 
@@ -203,26 +182,18 @@ Key decisions: <up to 3, each with [USER]/[INFERRED]/[DEFAULT]/[GUESS]>
 Relied on defaults: <comma-separated list with catalogue IDs, or "none found">
 Weakest point: <the single most likely failure or gap>
 Be ready to answer: "<the one hardest question>"
-Full brief: .whiteboard/<file>   (or: run /whiteboard for the full brief)
+Full brief: run /whiteboard
 ```
 
-If `output` is `both` or `file`, also write the full brief in the same turn (see below), so the pointer is real.
+Do not write a file in short mode; the last line always points to `/whiteboard`.
 
 ## Saving the brief
 
-When saving: ensure the directory exists, write `<directory>/<YYYY-MM-DD>-<slug>.md` where the slug is three to five lowercase words from the work, and never overwrite an existing brief (append `-2`). Do not add the directory to `.gitignore` and do not commit it; tell the user in one line that it is uncommitted and let them decide.
+Only full briefs are saved; see `references/full-brief.md`.
 
 ## Quiz mode
 
-Goal: make the user practice defending the work, not read about it.
-
-1. Use the most recent brief (file or this session). If none exists, build the analysis silently first.
-2. Ask **one** question at a time, from the "Defend it" list and the Decisions table. Mix "why X over Y", "where does this fail", and "what if an attacker...".
-3. Wait for the answer. Do not hint beforehand.
-4. Grade it briefly against what is actually true in the code: **solid**, **partly right** (say what is missing), or **wrong** (say what is true). One or two sentences. Then show the model answer only if the user was not solid.
-5. After five questions or when the user says stop, summarize: which decisions the user can defend, and which to revisit. Offer to save the summary.
-
-Never grade against an answer you invented. If you are unsure what the code does, read it before grading.
+Read `references/quiz.md` and follow it.
 
 ## Honesty limits
 

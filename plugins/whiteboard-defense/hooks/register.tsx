@@ -219,7 +219,8 @@ export const register: Register = (on, options) => {
     if (p.files.length === 0 || p.lines < threshold) return done
     const cfg = await projectConfig($)
     const auto = cfg.auto ?? (typeof options.auto === 'string' ? options.auto : 'short')
-    if (auto === 'off' || cfg.tier === 'poc') return done
+    // suggest: no extra turn; the band's "Brief me" button stays up instead.
+    if (auto === 'off' || auto === 'suggest' || cfg.tier === 'poc') return done
     // Reset first so a brief turn that fails to report cannot re-trigger itself.
     await update($, pending, () => NONE)
     void $.prompt.submit({ text: auto === 'full' ? PROMPTS.brief : PROMPTS.short })

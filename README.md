@@ -93,7 +93,7 @@ Create `.whiteboard/config.json` in a project, or `~/.config/whiteboard-defense/
 }
 ```
 
-- `auto`: `short` (default), `full`, or `off`
+- `auto`: `short` (default, a cheap chat-only digest), `full`, `suggest` (Claude Code: a "Brief me" button, no extra turn), or `off`
 - `output`: `both` (default), `chat`, or `file`
 - `tier`: set `"poc"` to skip automatic briefs in a project that is a demo
 
@@ -104,7 +104,7 @@ In Claude Code the plugin also draws in the interface. This is on by default:
 - **A band above the prompt**: `N files changed since last brief [Brief me]`, then after a brief, `8 decisions · 2 DEFAULT · 1 GUESS [Open] [Quiz me] [Hide]`.
 - **A brief pane** (`Open`): every decision with its colored tag, each default with its catalogue ID and a copy button for its `Avoid:` line, the weakest point, and the question to be ready for.
 - **A status line entry**: `wb: 2 default, 1 guess`.
-- **Reliable automatic briefs**: the plugin counts the lines changed by edits, and when a turn ends past the threshold (30 lines by default) it asks for a short brief. Edits to `.whiteboard/` are not counted, and `auto: "off"` or `tier: "poc"` in `.whiteboard/config.json` turn it off.
+- **Reliable automatic briefs**: the plugin counts the lines changed by edits, and when a turn ends past the threshold (30 lines by default) it asks for a short brief. Edits to `.whiteboard/` are not counted, and `auto: "off"` or `tier: "poc"` in `.whiteboard/config.json` turn it off; `auto: "suggest"` keeps the button but spends no tokens until you press it.
 
 Switch back to the plain skill at any time:
 

@@ -24,7 +24,9 @@ Rules:
 
 ## Changing the skill
 
-`SKILL.md` is the product. Keep the provenance tags and the "Not verified" section; the rest is negotiable. Run `node evals/run.mjs` before and after a change to the skill and compare: it costs real model calls, so it is not part of CI. If you change behavior, update `examples/sample-brief.md` and the README table.
+`SKILL.md` is the product. Keep the provenance tags and the "Not verified" section; the rest is negotiable. Run `node evals/run.mjs` before and after a change to the skill and compare: it costs real model calls, so it is not part of CI.
+
+Never use an eval scenario's case as an example in `SKILL.md` or the catalogue ("in-memory rate limiter", "return every customer", "state in Redis"). Agents copy examples nearly word for word, so the eval then measures recall of the example instead of matching. Take examples from catalogue entries no scenario covers. If you change behavior, update `examples/sample-brief.md` and the README table.
 
 ## Testing locally
 

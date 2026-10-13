@@ -1,29 +1,52 @@
-// Simulated Claude Code sessions with the whiteboard-defense plugin.
-// The transcript is adapted from a real headless run; the drawing mirrors
-// what hooks/register.tsx renders (band, pane, status entry, toast).
+// Replicas of Claude Code sessions with the whiteboard-defense plugin.
+// The first one replays window.WB_DEMO (docs/demo-data.js), a recording of a
+// real eval run made by scripts/build-demo.mjs, so nothing in it is written by
+// hand; the drawing mirrors what hooks/register.tsx renders (band, pane,
+// status entry, toast). The quiz is scripted.
 (() => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  const BRIEF = {
-    title: 'ratelimit.py: token-bucket rate limiter',
-    tier: 'customer-facing (limits calls to the customer API)',
-    file: '.whiteboard/2026-10-13-token-bucket-rate-limiter.md',
-    decisions: [
-      ['USER', 'Algorithm', 'Token bucket', 'fixed window, sliding log'],
-      ['INFERRED', 'Language', 'Python', 'the repo is Python'],
-      ['DEFAULT', 'State location', 'In-process memory', 'Redis'],
-      ['DEFAULT', 'Refill', 'Lazy, on each call', 'background timer'],
-      ['DEFAULT', 'Clock', 'time.monotonic()', 'time.time()'],
-      ['GUESS', 'Concurrency', 'threading.Lock', 'asyncio.Lock'],
-    ],
-    defaults: [
-      ['D-ARCH-03', 'In-memory single-process state', 'Avoid: per-process rate-limit state; share buckets across workers (Redis).'],
-      ['not in catalogue', 'Lazy refill', null],
-      ['not in catalogue', 'threading.Lock without knowing the server model', 'State the server model (threaded or async) before choosing a lock.'],
-    ],
-    weakest: 'State is per process: four workers give each customer four buckets, so up to 4x the limit.',
-    question: 'What limit does a customer really get with four gunicorn workers?',
+  const DEMO = window.WB_DEMO
+  const REPORT_TOOL = 'mcp__whiteboard-defense__report'
+  const PLUGIN_ORIGIN = 'whiteboard-defense'
+  const PROVENANCE = ['USER', 'INFERRED', 'DEFAULT', 'GUESS']
+
+  // The report tool's input as the plugin reads it (toBrief in register.tsx):
+  // malformed rows are dropped, blank strings count as absent.
+  const text = v => (typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined)
+  function toBrief(input) {
+    if (!input || !text(input.title)) return null
+    return {
+      title: text(input.title),
+      tier: text(input.tier),
+      file: text(input.file),
+      decisions: (Array.isArray(input.decisions) ? input.decisions : []).flatMap(r => {
+        const p = typeof r?.provenance === 'string' ? r.provenance.toUpperCase() : ''
+        return text(r?.decision) && text(r?.choice) && PROVENANCE.includes(p)
+          ? [{ decision: text(r.decision), choice: text(r.choice), provenance: p, alternative: text(r.alternative), id: text(r.id) }]
+          : []
+      }),
+      defaults: (Array.isArray(input.defaults) ? input.defaults : []).flatMap(r =>
+        text(r?.name) ? [{ name: text(r.name), id: text(r.id), avoid: text(r.avoid) }] : []),
+      weakest: text(input.weakest),
+      question: text(input.question),
+    }
   }
+  const countTags = brief => {
+    const n = { USER: 0, INFERRED: 0, DEFAULT: 0, GUESS: 0 }
+    brief.decisions.forEach(d => { n[d.provenance] += 1 })
+    return n
+  }
+  const statusText = brief => {
+    const n = countTags(brief)
+    return n.DEFAULT + n.GUESS > 0 ? `wb: ${n.DEFAULT} default, ${n.GUESS} guess` : 'wb: briefed'
+  }
+  const BRIEF = DEMO ? toBrief(DEMO.report) : null
+  const rows = DEMO ? DEMO.transcript : []
+  const briefFile = BRIEF?.file ?? '.whiteboard/brief.md'
+  // "Wrote 96 lines to <file>" from the recorded write of the brief
+  const briefLines = Number(rows.find(r => r.kind === 'tool' && r.label === `Write(${briefFile})`)?.output.match(/Wrote (\d+) lines/)?.[1]) || 0
+
   const TAG = { USER: 'c-user', INFERRED: 'c-inf', DEFAULT: 'c-def', GUESS: 'c-gue' }
 
   const QUIZ = [
@@ -49,6 +72,13 @@
 
   const sleep = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms))
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+  // Recorded text to safe HTML: everything is escaped first, then only
+  // **bold**, `code`, "- " bullets and the four provenance tags come back.
+  const md = s => esc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<span class="t-b">$1</span>')
+    .replace(/`([^`\n]+)`/g, '<span class="t-code">$1</span>')
+    .replace(/^- /gm, '\u2022 ')
+    .replace(/\[(USER|INFERRED|DEFAULT|GUESS)\]/g, (m, p) => `<span class="${TAG[p]}">${m}</span>`)
 
   function Term(root) {
     const $ = sel => root.querySelector(sel)
@@ -102,6 +132,7 @@
         t.typed.textContent = ''
         t.band.hidden = true
         t.band.textContent = ''
+        t.report = null
         t.closePane()
         if (t.wb) t.wb.textContent = ''
         t.toastEl.classList.remove('on')
@@ -131,10 +162,9 @@
   }
 
   function bandBrief(t) {
-    const n = { DEFAULT: 0, GUESS: 0 }
-    BRIEF.decisions.forEach(d => { if (d[0] in n) n[d[0]] += 1 })
+    const n = countTags(t.report)
     t.band.hidden = false
-    t.band.innerHTML = `<span class="t-b">whiteboard</span><span><span class="t-dim">${esc(BRIEF.title)} · ${BRIEF.decisions.length} decisions </span><span class="c-def">${n.DEFAULT} DEFAULT</span> <span class="c-gue">${n.GUESS} GUESS</span></span>`
+    t.band.innerHTML = `<span class="t-b">whiteboard</span><span><span class="t-dim">${esc(t.report.title)} · ${t.report.decisions.length} decisions </span>${n.DEFAULT ? `<span class="c-def">${n.DEFAULT} DEFAULT </span>` : ''}${n.GUESS ? `<span class="c-gue">${n.GUESS} GUESS</span>` : ''}</span>`
     t.band.append(
       btn('Open', 'o', () => t.openPane()),
       btn('Quiz me', 'q', () => quiz(t, true)),
@@ -144,19 +174,21 @@
 
   function renderPane(t) {
     const body = t.pane.querySelector('.pane-body')
-    const d = BRIEF.decisions.map(([p, what, choice, alt]) =>
-      `<span class="row"><span class="${TAG[p]}">[${p}]</span> ${esc(what)}: ${esc(choice)} <span class="t-dim">(not: ${esc(alt)})</span></span>`).join('')
+    const b = t.report
+    if (!b) { body.innerHTML = '<div class="t-dim">No brief yet. Run /whiteboard-defense:whiteboard after some work.</div>'; return }
+    const d = b.decisions.map(x =>
+      `<span class="row"><span class="${TAG[x.provenance]}">[${x.provenance}]</span> ${esc(x.decision)}: ${esc(x.choice)}${x.id ? ` <span class="t-dim">${esc(x.id)}</span>` : ''}${x.alternative ? ` <span class="t-dim">(not: ${esc(x.alternative)})</span>` : ''}</span>`).join('')
     body.innerHTML = `
-      <div><div class="t-b">${esc(BRIEF.title)}</div><div class="t-dim">Tier: ${esc(BRIEF.tier)}</div><div class="t-dim">Saved: ${esc(BRIEF.file)}</div></div>
+      <div><div class="t-b">${esc(b.title)}</div>${b.tier ? `<div class="t-dim">Tier: ${esc(b.tier)}</div>` : ''}${b.file ? `<div class="t-dim">Saved: ${esc(b.file)}</div>` : ''}</div>
       <div><div class="t-b">Decisions</div>${d}</div>
-      <div class="defaults"><div class="t-b">Defaults relied on</div></div>
-      <div><span class="t-b">Weakest point: </span>${esc(BRIEF.weakest)}</div>
-      <div><span class="t-b">Be ready for: </span>${esc(BRIEF.question)}</div>
+      <div class="defaults"><div class="t-b">Defaults relied on</div>${b.defaults.length ? '' : '<div class="t-dim">None found.</div>'}</div>
+      ${b.weakest ? `<div><span class="t-b">Weakest point: </span>${esc(b.weakest)}</div>` : ''}
+      ${b.question ? `<div><span class="t-b">Be ready for: </span>${esc(b.question)}</div>` : ''}
       <div class="pane-actions"></div>`
     const defs = body.querySelector('.defaults')
-    BRIEF.defaults.forEach(([id, name, avoid]) => {
+    b.defaults.forEach(({ id, name, avoid }) => {
       const row = document.createElement('div')
-      row.innerHTML = `<span class="c-def">${esc(id)}</span> ${esc(name)}`
+      row.innerHTML = `<span class="c-def">${esc(id ?? 'not in catalogue')}</span> ${esc(name)}`
       if (avoid) {
         const line = document.createElement('div')
         line.innerHTML = `<span class="avoid">${esc(avoid)}</span> `
@@ -178,8 +210,9 @@
 
   async function quiz(t, fromBand) {
     const id = ++t.run
+    t.report = t.report ?? BRIEF
     if (fromBand) t.add('t-prompt from-plugin', '<span class="origin">whiteboard-defense</span> Use the whiteboard skill in quiz mode.')
-    if (!(await t.tool('Read(' + BRIEF.file + ')', 'Read 96 lines', 500, id))) return
+    if (!(await t.tool('Read(' + briefFile + ')', briefLines ? `Read ${briefLines} lines` : 'Read brief', 500, id))) return
     const results = []
     for (let i = 0; i < QUIZ.length; i++) {
       const item = QUIZ[i]
@@ -211,49 +244,57 @@
     t.msg(`<span class="t-b">Summary.</span> You can defend: ${good.length ? esc(good.join(', ')) : 'nothing yet'}. Revisit: ${redo.length ? esc(redo.join(', ')) : 'nothing'}.`)
   }
 
+  // Replays the recorded session row by row. Turn 1 is everything before the
+  // plugin's own prompt; turn 2 is what the skill did when that prompt arrived.
   async function playAuto(t, mode) {
     const id = t.reset()
+    if (!DEMO || rows.length === 0) { t.msg('The recording did not load, so there is nothing to replay.'); return }
+    const rich = mode === 'rich'
+    const written = new Set()
+    let turn = 1
     await sleep(500)
-    if (!(await t.type('Write ratelimit.py: a token-bucket rate limiter for our customer API.', id))) return
-    await sleep(500)
-    t.msg('I\'ll write a token-bucket limiter as one class.')
-    if (!(await t.tool('Write(ratelimit.py)', 'Wrote 48 lines to ratelimit.py', 900, id))) return
-    if (mode === 'rich') bandPending(t, 1)
-    await sleep(500)
-    t.msg('Wrote <span class="t-code">ratelimit.py</span>: a thread-safe <span class="t-code">TokenBucket</span> with <span class="t-code">allow()</span> and <span class="t-code">retry_after()</span>. I haven\'t run it.')
-    await sleep(1100)
-    if (id !== t.run) return
-
-    if (mode === 'prompt') {
-      t.add('t-note', 'Prompt mode: no band, no automatic trigger. Ask for the brief yourself.')
-      await sleep(900)
-      if (!(await t.type('/whiteboard-defense:whiteboard', id))) return
-    } else {
-      t.band.hidden = true
-      t.add('t-prompt from-plugin', '<span class="origin">whiteboard-defense</span> Use the whiteboard skill in short mode for the work in the previous turn.')
+    for (const row of rows) {
+      if (id !== t.run) return
+      if (row.kind === 'prompt' && row.origin === 'user') {
+        if (!(await t.type(row.text, id))) return
+      } else if (row.kind === 'prompt') {
+        turn = 2
+        await sleep(1100)
+        if (id !== t.run) return
+        if (rich) {
+          t.band.hidden = true
+          t.add('t-prompt from-plugin', `<span class="origin">${PLUGIN_ORIGIN}</span> ${esc(row.text)}`)
+        } else {
+          t.add('t-note', 'Prompt mode: no band, no automatic trigger. Ask for the brief yourself.')
+          await sleep(900)
+          if (!(await t.type('/whiteboard-defense:whiteboard', id))) return
+        }
+      } else if (row.kind === 'text') {
+        await sleep(500)
+        t.msg(md(row.text))
+        await sleep(Math.min(1400, 400 + row.text.length * 4))
+      } else if (row.kind === 'tool') {
+        if (row.name === REPORT_TOOL && !rich) continue
+        await sleep(400)
+        if (!(await t.tool(esc(row.label), esc(row.output), /^(Write|Edit)\(/.test(row.label) ? 900 : 600, id))) return
+        if (turn === 1 && /^(Write|Edit)\(/.test(row.label)) {
+          written.add(row.label)
+          if (rich) bandPending(t, written.size)
+        }
+        if (row.name === REPORT_TOOL && BRIEF) {
+          t.report = BRIEF
+          const n = countTags(BRIEF)
+          if (n.DEFAULT + n.GUESS > 0) t.toast(`Whiteboard: ${n.DEFAULT + n.GUESS} decision(s) you never made. See the band above the prompt.`)
+          t.wb.textContent = statusText(BRIEF)
+        }
+      }
     }
-    await sleep(500)
-    if (!(await t.tool('Skill(whiteboard-defense:whiteboard)', 'Successfully loaded skill', 600, id))) return
-    if (!(await t.tool('Write(' + BRIEF.file + ')', 'Wrote 96 lines', 800, id))) return
-    if (mode === 'rich') {
-      if (!(await t.tool('whiteboard-defense - report (MCP)', 'Shown to the user in the Whiteboard Defense band and pane', 600, id))) return
-      t.toast('Whiteboard: 4 decision(s) you never made. See the band above the prompt.')
-      t.wb.textContent = 'wb: 3 default, 1 guess'
-    }
-    await sleep(400)
-    t.msg(
-      '<span class="t-b">Whiteboard (short):</span> ratelimit.py, a thread-safe token-bucket limiter. Not wired up or run yet.\n' +
-      'Key decisions: token bucket <span class="c-user">[USER]</span> · in-process state <span class="c-def">[DEFAULT]</span> · threading.Lock <span class="c-gue">[GUESS]</span>\n' +
-      'Relied on defaults: in-memory single-process state (D-ARCH-03), lazy refill, monotonic clock\n' +
-      'Weakest point: state is per process, so four workers allow up to 4x the limit.\n' +
-      'Be ready to answer: "What limit does a customer really get with four gunicorn workers?"\n' +
-      '<span class="t-dim">Full brief: ' + BRIEF.file + '</span>')
-    if (mode === 'rich') bandBrief(t)
+    if (rich && t.report) bandBrief(t)
   }
 
   async function playQuiz(t) {
     const id = t.reset()
-    t.wb.textContent = 'wb: 3 default, 1 guess'
+    if (BRIEF) t.wb.textContent = statusText(BRIEF)
     await sleep(400)
     if (!(await t.type('/whiteboard-defense:whiteboard quiz', id))) return
     await sleep(300)
@@ -280,6 +321,16 @@
   }
 
   const auto = document.getElementById('demo-auto')
+  if (auto && DEMO) {
+    const when = new Date(DEMO.recordedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    const src = document.getElementById('demo-source')
+    if (src) src.textContent = `Replayed from a recorded eval run (${DEMO.model}, ${when}). Nothing here is hand-written.`
+    const model = auto.querySelector('.statusline span')
+    if (model && DEMO.model) model.textContent = `${DEMO.model} · ~/billing-api · main`
+    const lines = document.getElementById('demo-lines')
+    const n = rows.find(r => r.kind === 'tool' && /^Write\(/.test(r.label))?.output.match(/Wrote (\d+) lines/)?.[1]
+    if (lines && n) lines.textContent = `${n} changed lines`
+  }
   const quizRoot = document.getElementById('demo-quiz')
   if (auto) setup(auto, playAuto)
   if (quizRoot) setup(quizRoot, t => playQuiz(t))

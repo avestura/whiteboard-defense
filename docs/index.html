@@ -226,10 +226,10 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
             <div class="statusline"><span>Opus 5.5 · ~/billing-api · main</span><span class="wb"></span></div>
             <div class="toast" role="status"></div>
           </div>
-          <p class="demo-foot">Adapted from a real run of the plugin. Switch to <b>prompt</b> to see the plain skill with no interface changes (<code>/whiteboard-ui prompt</code>).</p>
+          <p class="demo-foot"><span id="demo-source">Replayed from a recorded eval run.</span> Switch to <b>prompt</b> to see the plain skill with no interface changes (<code>/whiteboard-ui prompt</code>).</p>
         </div>
         <div class="note">
-          the turn ends, the plugin counts <b>48 changed lines</b> and asks for a brief by itself.
+          the turn ends, the plugin counts <b id="demo-lines">the changed lines</b> and asks for a brief by itself.
           <br><br>then try <b>[ Open ]</b> and the copy buttons in the pane.
         </div>
       </div>
@@ -274,7 +274,7 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
   <section aria-labelledby="use">
     <h2 id="use">Using it</h2>
     <dl class="cmds">
-      <dt>automatic</dt><dd>A 15-line digest after each substantial task. Turn it off with one sentence or <code>"auto": "off"</code>.</dd>
+      <dt>automatic</dt><dd>A 15-line chat digest after each substantial task; it reads no extra files and saves nothing, to stay cheap. Turn it off with one sentence or <code>"auto": "off"</code>.</dd>
       <dt>/whiteboard-ui prompt</dt><dd>Claude Code only: turn the band, pane and status entry off and keep the plain skill. <code>/whiteboard-ui rich</code> brings them back.</dd>
       <dt>/whiteboard</dt><dd>The full brief for the current work.</dd>
       <dt>/whiteboard full 142</dt><dd>A brief for a PR, branch, or path that already exists.</dd>
@@ -335,6 +335,7 @@ claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="
     setTimeout(() => btn.textContent = 'copy', 1600);
   }));
 </script>
+<script src="demo-data.js"></script>
 <script src="demo.js" defer></script>
 </body>
 </html>
