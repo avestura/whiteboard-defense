@@ -62,12 +62,14 @@
   section { margin-top: clamp(56px, 9vw, 110px); }
   p { margin: .6rem 0; max-width: 62ch; }
 
-  /* Hero: text left, install tray right; deliberately unbalanced. */
-  .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: start; }
-  .hero .lede { font-size: 1.45rem; margin-top: 1.4rem; max-width: 34ch; }
-  .underline { display: block; width: min(420px, 90%); height: 24px; margin-top: 4px; }
-  .quote-note { font-family: var(--hand); font-size: 1.45rem; color: var(--blue); margin-top: 1.6rem; max-width: 30ch; transform: rotate(-1deg); }
-  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+  /* Hero: headline gets the full width; lede and margin note share a row; install tray below. */
+  .hero h1 { max-width: none; }
+  .hero-copy { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: end; margin-top: 1.2rem; }
+  .hero .lede { font-size: 1.45rem; margin: 0; max-width: 40ch; }
+  .underline { display: block; width: min(560px, 90%); height: 24px; margin-top: 8px; }
+  .quote-note { font-family: var(--hand); font-size: 1.6rem; color: var(--blue); margin: 0; max-width: 24ch; transform: rotate(-2deg); }
+  #install { margin-top: 2.4rem; max-width: 920px; }
+  @media (max-width: 760px) { .hero-copy { grid-template-columns: 1fr; gap: 20px; } }
 
   /* Install: marker tray with tabs. */
   .tray { background: var(--tray); border-radius: 8px; padding: 14px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.12), 0 6px 12px rgba(0,0,0,.12); }
@@ -82,9 +84,10 @@
   .panel.on { display: block; }
   pre {
     margin: 0; background: var(--code-bg); color: var(--code-ink); font: 400 .82rem/1.55 var(--mono);
-    padding: 14px 16px; border-radius: 5px; overflow-x: auto; position: relative; white-space: pre;
+    padding: 14px 76px 14px 16px; border-radius: 5px; overflow-x: auto; white-space: pre;
   }
-  .copy { position: absolute; top: 8px; right: 8px; font: 600 .7rem var(--mono); background: #3a444b; color: #fff; border: 0; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+  .cmd { position: relative; min-width: 0; }
+  .copy { position: absolute; top: 9px; right: 9px; font: 600 .7rem var(--mono); background: #3a444b; color: #fff; border: 0; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
   .copy:hover { background: #55616a; }
   .tray small { display: block; font-family: var(--hand); font-size: 1.3rem; margin-top: 8px; line-height: 1.15; }
 
@@ -100,10 +103,11 @@
   td { padding: 8px; border-bottom: 1px solid rgba(0,0,0,.2); vertical-align: top; }
   .scroll { overflow-x: auto; }
   .circled { background: linear-gradient(transparent 62%, rgba(196,50,31,.22) 62%); }
-  .margin { display: grid; grid-template-columns: 1fr 230px; gap: 28px; align-items: start; }
+  .margin { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 28px; align-items: start; }
   .margin .note { font-family: var(--hand); font-size: 1.5rem; line-height: 1.15; color: var(--red); transform: rotate(2deg); padding-top: 38px; }
   .margin .note svg { width: 70px; height: 40px; display: block; margin-bottom: 4px; }
-  @media (max-width: 900px) { .margin { grid-template-columns: 1fr; } .margin .note { padding-top: 0; } }
+  @media (max-width: 900px) { .margin { grid-template-columns: minmax(0, 1fr); } .margin .note { padding-top: 0; } }
+  @media (max-width: 600px) { .board { margin: 0; border-width: 8px; border-radius: 0; } }
 
   /* Defaults list: ruled like notebook lines, no cards. */
   .rules { list-style: none; padding: 0; margin: 1rem 0 0; max-width: 78ch; }
@@ -141,8 +145,10 @@
       <span class="eyebrow">for anything customers touch</span>
       <h1>Could you defend it?</h1>
       <svg class="underline" viewBox="0 0 420 24" aria-hidden="true"><path d="M4 14 C 60 4, 120 22, 190 11 S 330 6, 416 13" fill="none" stroke="#c4321f" stroke-width="5" stroke-linecap="round"/></svg>
-      <p class="lede">Your agent made dozens of decisions you never saw. Some were choices. Many were just its habits. Whiteboard Defense tells you which is which, before someone asks.</p>
-      <p class="quote-note">&ldquo;Why did you do X instead of Y?&rdquo; is a fair question to get on a Tuesday.</p>
+      <div class="hero-copy">
+        <p class="lede">Your agent made dozens of decisions you never saw. Some were choices. Many were just its habits. Whiteboard Defense tells you which is which, before someone asks.</p>
+        <p class="quote-note">&ldquo;Why did you do X instead of Y?&rdquo; is a fair question to get on a Tuesday.</p>
+      </div>
     </div>
 
     <div id="install">
@@ -154,12 +160,12 @@
           <button role="tab" aria-selected="false" data-tab="cx">Codex</button>
           <button role="tab" aria-selected="false" data-tab="oc">OpenCode</button>
         </div>
-        <div class="panel on" id="p-sh"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh<button class="copy">copy</button></pre></div>
-        <div class="panel" id="p-ps"><pre>irm https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.ps1 | iex<button class="copy">copy</button></pre></div>
-        <div class="panel" id="p-cc"><pre>claude plugin marketplace add avestura/whiteboard-defense
-claude plugin install whiteboard-defense@whiteboard-defense<button class="copy">copy</button></pre></div>
-        <div class="panel" id="p-cx"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- codex<button class="copy">copy</button></pre></div>
-        <div class="panel" id="p-oc"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- opencode<button class="copy">copy</button></pre></div>
+        <div class="panel cmd on" id="p-sh"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh</pre><button class="copy">copy</button></div>
+        <div class="panel cmd" id="p-ps"><pre>irm https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.ps1 | iex</pre><button class="copy">copy</button></div>
+        <div class="panel cmd" id="p-cc"><pre>claude plugin marketplace add avestura/whiteboard-defense
+claude plugin install whiteboard-defense@whiteboard-defense</pre><button class="copy">copy</button></div>
+        <div class="panel cmd" id="p-cx"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- codex</pre><button class="copy">copy</button></div>
+        <div class="panel cmd" id="p-oc"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- opencode</pre><button class="copy">copy</button></div>
         <small id="hint">One command: installs for every agent it finds on your PATH.</small>
       </div>
     </div>
@@ -263,7 +269,7 @@ claude plugin install whiteboard-defense@whiteboard-defense<button class="copy">
     document.getElementById('hint').textContent = hints[b.dataset.tab];
   }));
   document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', async () => {
-    const text = btn.parentElement.firstChild.textContent;
+    const text = btn.parentElement.querySelector('pre').textContent;
     try { await navigator.clipboard.writeText(text); btn.textContent = 'copied'; }
     catch { btn.textContent = 'select + ctrl-c'; }
     setTimeout(() => btn.textContent = 'copy', 1600);
