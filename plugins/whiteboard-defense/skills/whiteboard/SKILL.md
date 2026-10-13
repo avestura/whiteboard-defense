@@ -28,6 +28,17 @@ Read the first word of the user's arguments, if any.
 | `config` | `config` | Show or change preferences. See "Preferences". |
 | `ship` / `poc` | `tier` | Record whether the work is customer-facing or a PoC. See "Tiering". |
 
+## Claude Code rich UI
+
+When the tool `mcp__whiteboard-defense__report` is available, the Whiteboard Defense plugin draws the brief in Claude Code's interface (a band above the prompt, a pane, a status entry) and decides when automatic briefs run. Then:
+
+- **Do not start automatic briefs yourself.** The plugin counts changed lines and asks for a short brief at the end of a turn when it is due. Its request says it was "triggered automatically by the whiteboard-defense plugin".
+- **When the plugin asks**, apply Tiering and "Substantial" as usual. If the work does not qualify, reply in one line and do not call the tool.
+- **After every brief you produce** (short or full, automatic or invoked), call `mcp__whiteboard-defense__report` once with the same content: title, tier, saved file path, the Decisions table rows with their provenance tags, the "Defaults I relied on" items with catalogue IDs and `Avoid:` lines, the weakest point, and the hardest question. Write the file first so the path is real.
+- Keep the chat digest as specified; the pane holds the detail, so do not paste the decisions table twice.
+
+When the tool is not available (Codex, OpenCode, or Claude Code with the UI set to `prompt`), ignore this section.
+
 ## Preferences
 
 Read config before doing anything. Look in this order and use the first file found; if none exists, use the defaults.

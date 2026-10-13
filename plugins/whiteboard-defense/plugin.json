@@ -1,15 +1,16 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "whiteboard-defense",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "After substantial work, tells you what you should know to defend it at a whiteboard: the decisions, who made each one, and where the agent relied on its defaults.",
   "author": { "name": "avestura", "url": "https://github.com/avestura" },
-  "homepage": "https://avestura.github.io/whiteboard-defense/",
+  "homepage": "https://github.avestura.dev/whiteboard-defense/",
   "repository": "https://github.com/avestura/whiteboard-defense",
   "license": "MIT",
   "keywords": ["whiteboard-defense", "decisions", "defaults", "code-review", "skill"],
   "extensions": {
     "com.openai": {
+      "hooks": [],
       "interface": {
         "displayName": "Whiteboard Defense",
         "shortDescription": "Know what you shipped, and where the agent used its defaults",

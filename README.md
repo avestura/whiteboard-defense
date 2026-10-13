@@ -4,7 +4,7 @@
 
 A skill and plugin for Claude Code, Codex, and OpenCode. After substantial work, it briefs you on how the thing works, which decisions were made, who made each one (you, the context, or the agent's habit), where it fails, and the questions you should be able to answer if someone pulled you aside at a whiteboard.
 
-Site: https://avestura.github.io/whiteboard-defense/
+Site: https://github.avestura.dev/whiteboard-defense/
 
 ## Why
 
@@ -97,6 +97,26 @@ Create `.whiteboard/config.json` in a project, or `~/.config/whiteboard-defense/
 - `output`: `both` (default), `chat`, or `file`
 - `tier`: set `"poc"` to skip automatic briefs in a project that is a demo
 
+### Claude Code: rich UI
+
+In Claude Code the plugin also draws in the interface. This is on by default:
+
+- **A band above the prompt**: `N files changed since last brief [Brief me]`, then after a brief, `8 decisions · 2 DEFAULT · 1 GUESS [Open] [Quiz me] [Hide]`.
+- **A brief pane** (`Open`): every decision with its colored tag, each default with its catalogue ID and a copy button for its `Avoid:` line, the weakest point, and the question to be ready for.
+- **A status line entry**: `wb: 2 default, 1 guess`.
+- **Reliable automatic briefs**: the plugin counts the lines changed by edits, and when a turn ends past the threshold (30 lines by default) it asks for a short brief. Edits to `.whiteboard/` are not counted, and `auto: "off"` or `tier: "poc"` in `.whiteboard/config.json` turn it off.
+
+Switch back to the plain skill at any time:
+
+```
+/whiteboard-ui prompt     # skill only: no band, pane, status or automatic trigger
+/whiteboard-ui rich       # back to the UI
+```
+
+The same settings (`ui`, `auto`, `autoThreshold`) are rows in `/config`.
+
+Codex and OpenCode use the skill alone. OpenCode's v2 plugin API has UI slots and panels too; a port is possible but not built yet.
+
 ## What this can and cannot do
 
 Honest limits, because a tool about honesty should have them:
@@ -105,7 +125,7 @@ Honest limits, because a tool about honesty should have them:
 - The "why" is reconstructed from the conversation and the diff. It is usually right and can still be wrong. Shaky reconstructions are tagged `[GUESS]`.
 - The defaults catalogue is the strongest piece and also the least complete. It is community-extendable. See [CONTRIBUTING.md](CONTRIBUTING.md).
 - It does not replace reading the parts that matter. It tells you where to look.
-- Instruction-following is probabilistic. Automatic briefs depend on the agent honoring the skill description; if one is skipped, run `/whiteboard`.
+- In Codex, OpenCode, and Claude Code's prompt mode, automatic briefs depend on the agent honoring the skill description, which is probabilistic. If one is skipped, run `/whiteboard`. Claude Code's rich UI triggers them from the plugin instead.
 
 ## Repository layout
 
@@ -115,6 +135,9 @@ Honest limits, because a tool about honesty should have them:
 plugins/whiteboard-defense/
   .claude-plugin/plugin.json           Claude Code manifest
   plugin.json                          Codex / portable manifest
+  hooks/register.tsx                   Claude Code UI: band, pane, status, auto-trigger
+  types/index.d.ts                     its state contract
+  tests/register.test.ts               run with: claude plugin test plugins/whiteboard-defense
   skills/whiteboard/
     SKILL.md                           the skill (shared by all three agents)
     references/defaults-catalogue.md   known default patterns

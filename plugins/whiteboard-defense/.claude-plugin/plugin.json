@@ -1,10 +1,33 @@
 {
   "name": "whiteboard-defense",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "After substantial work, tells you what you should know to defend it at a whiteboard: the decisions, who made each one, and where the agent relied on its defaults.",
   "author": { "name": "avestura", "url": "https://github.com/avestura" },
-  "homepage": "https://avestura.github.io/whiteboard-defense/",
+  "homepage": "https://github.avestura.dev/whiteboard-defense/",
   "repository": "https://github.com/avestura/whiteboard-defense",
   "license": "MIT",
-  "keywords": ["whiteboard-defense", "decisions", "defaults", "code-review", "skill"]
+  "keywords": ["whiteboard-defense", "decisions", "defaults", "code-review", "skill"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "ui": {
+      "type": "string",
+      "title": "Interface",
+      "description": "rich: band above the prompt, brief pane, status entry and automatic briefs. prompt: the skill alone, as in Codex and OpenCode.",
+      "options": ["rich", "prompt"],
+      "default": "rich"
+    },
+    "auto": {
+      "type": "string",
+      "title": "Automatic brief",
+      "description": "Brief automatically after a turn that changed enough code. A project's .whiteboard/config.json overrides this.",
+      "options": ["short", "full", "off"],
+      "default": "short"
+    },
+    "autoThreshold": {
+      "type": "number",
+      "title": "Automatic brief threshold (lines)",
+      "description": "Changed lines since the last brief needed before an automatic brief.",
+      "default": 30
+    }
+  }
 }
