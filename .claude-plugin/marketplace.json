@@ -1,0 +1,12 @@
+{
+  "name": "whiteboard-defense",
+  "description": "Skills that help you understand and defend what your AI agent built",
+  "owner": { "name": "avestura", "url": "https://github.com/avestura" },
+  "plugins": [
+    {
+      "name": "whiteboard-defense",
+      "source": "./plugins/whiteboard-defense",
+      "description": "Briefs you on the decisions behind AI-built work and flags where the agent relied on its defaults."
+    }
+  ]
+}

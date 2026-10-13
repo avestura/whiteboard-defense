@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whiteboard Defense: know what your AI agent built</title>
+<meta name="description" content="A skill and plugin for Claude Code, Codex and OpenCode. After substantial work it tells you the decisions behind it, who made each one, and where the agent relied on its defaults.">
+<meta property="og:title" content="Whiteboard Defense">
+<meta property="og:description" content="Know what your AI agent built, and where it just used its defaults.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --board: #f3f1e8;
+    --board-edge: #cfcabb;
+    --ink: #1d2327;
+    --ink-soft: #4b5359;
+    --blue: #1f4fb8;
+    --green: #1c7a43;
+    --red: #c4321f;
+    --amber: #b86b00;
+    --tray: #d9d6cb;
+    --code-bg: #20262b;
+    --code-ink: #eef0e6;
+    --marker: "Permanent Marker", "Marker Felt", cursive;
+    --hand: "Caveat", "Segoe Print", cursive;
+    --body: "Newsreader", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--tray);
+    color: var(--ink);
+    font: 400 1.2rem/1.6 var(--body);
+  }
+  /* The page is one big board with a frame. */
+  .board {
+    max-width: 1180px;
+    margin: 28px auto;
+    background:
+      radial-gradient(ellipse 40% 12% at 18% 22%, rgba(0,0,0,.035), transparent 70%),
+      radial-gradient(ellipse 35% 10% at 72% 61%, rgba(0,0,0,.03), transparent 70%),
+      radial-gradient(ellipse 50% 8% at 40% 88%, rgba(0,0,0,.03), transparent 70%),
+      var(--board);
+    border: 14px solid #b9b5a6;
+    border-radius: 6px;
+    box-shadow: 0 0 0 2px #8f8b7c, 0 18px 30px rgba(0,0,0,.18);
+    padding: clamp(24px, 5vw, 64px);
+    position: relative;
+  }
+  a { color: var(--blue); text-underline-offset: 3px; }
+  h1, h2, h3 { font-family: var(--marker); font-weight: 400; line-height: 1.1; margin: 0; }
+  h1 { font-size: clamp(2.6rem, 7vw, 5.4rem); transform: rotate(-1.2deg); max-width: 11ch; }
+  h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: .6rem; transform: rotate(-.6deg); }
+  h3 { font-size: 1.35rem; }
+  .hand { font-family: var(--hand); font-weight: 700; font-size: 1.5rem; line-height: 1.2; }
+  .eyebrow { font-family: var(--hand); font-size: 1.7rem; color: var(--red); transform: rotate(-2deg); display: inline-block; margin-bottom: .3rem; }
+  section { margin-top: clamp(56px, 9vw, 110px); }
+  p { margin: .6rem 0; max-width: 62ch; }
+
+  /* Hero: text left, install tray right; deliberately unbalanced. */
+  .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: start; }
+  .hero .lede { font-size: 1.45rem; margin-top: 1.4rem; max-width: 34ch; }
+  .underline { display: block; width: min(420px, 90%); height: 24px; margin-top: 4px; }
+  .quote-note { font-family: var(--hand); font-size: 1.45rem; color: var(--blue); margin-top: 1.6rem; max-width: 30ch; transform: rotate(-1deg); }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+
+  /* Install: marker tray with tabs. */
+  .tray { background: var(--tray); border-radius: 8px; padding: 14px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.12), 0 6px 12px rgba(0,0,0,.12); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tabs button {
+    font: 600 .8rem var(--mono); border: 2px solid var(--ink); background: transparent; color: var(--ink);
+    padding: 5px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--board); }
+  .tabs button:focus-visible, .copy:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .panel { display: none; }
+  .panel.on { display: block; }
+  pre {
+    margin: 0; background: var(--code-bg); color: var(--code-ink); font: 400 .82rem/1.55 var(--mono);
+    padding: 14px 16px; border-radius: 5px; overflow-x: auto; position: relative; white-space: pre;
+  }
+  .copy { position: absolute; top: 8px; right: 8px; font: 600 .7rem var(--mono); background: #3a444b; color: #fff; border: 0; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+  .copy:hover { background: #55616a; }
+  .tray small { display: block; font-family: var(--hand); font-size: 1.3rem; margin-top: 8px; line-height: 1.15; }
+
+  /* Tags as marker-coloured stamps */
+  .tag { font: 600 .8rem var(--mono); padding: 1px 7px; border: 2px solid currentColor; border-radius: 3px; white-space: nowrap; display: inline-block; transform: rotate(-1.5deg); }
+  .t-user { color: var(--blue); } .t-inf { color: var(--green); } .t-def { color: var(--red); } .t-gue { color: var(--amber); }
+
+  /* The sample brief */
+  .sheet { background: rgba(255,255,255,.35); border: 2px dashed var(--ink-soft); border-radius: 4px; padding: clamp(14px, 3vw, 28px); }
+  .sheet h3 { margin-bottom: .4rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 1rem; line-height: 1.35; }
+  th { font: 600 .75rem var(--mono); text-transform: uppercase; letter-spacing: .04em; text-align: left; color: var(--ink-soft); border-bottom: 2px solid var(--ink); padding: 6px 8px; }
+  td { padding: 8px; border-bottom: 1px solid rgba(0,0,0,.2); vertical-align: top; }
+  .scroll { overflow-x: auto; }
+  .circled { background: linear-gradient(transparent 62%, rgba(196,50,31,.22) 62%); }
+  .margin { display: grid; grid-template-columns: 1fr 230px; gap: 28px; align-items: start; }
+  .margin .note { font-family: var(--hand); font-size: 1.5rem; line-height: 1.15; color: var(--red); transform: rotate(2deg); padding-top: 38px; }
+  .margin .note svg { width: 70px; height: 40px; display: block; margin-bottom: 4px; }
+  @media (max-width: 900px) { .margin { grid-template-columns: 1fr; } .margin .note { padding-top: 0; } }
+
+  /* Defaults list: ruled like notebook lines, no cards. */
+  .rules { list-style: none; padding: 0; margin: 1rem 0 0; max-width: 78ch; }
+  .rules li { display: grid; grid-template-columns: 112px 1fr; gap: 18px; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,.25); }
+  .rules code, code { font-family: var(--mono); font-size: .88em; background: rgba(0,0,0,.07); padding: 1px 5px; border-radius: 3px; }
+  .rules .id { font: 600 .85rem var(--mono); color: var(--red); padding-top: 4px; }
+  .rules b { font-weight: 600; }
+  @media (max-width: 600px) { .rules li { grid-template-columns: 1fr; gap: 2px; } }
+
+  /* Commands */
+  dl.cmds { display: grid; grid-template-columns: max-content 1fr; gap: 10px 26px; margin: 1rem 0 0; max-width: 78ch; }
+  dl.cmds dt { font: 600 .92rem var(--mono); padding-top: 4px; }
+  dl.cmds dd { margin: 0; }
+  @media (max-width: 600px) { dl.cmds { grid-template-columns: 1fr; gap: 0; } dl.cmds dd { margin-bottom: 12px; } }
+
+  /* Honest limits */
+  .limits { columns: 2 340px; column-gap: 48px; }
+  .limits p { break-inside: avoid; }
+  .limits .x { font-family: var(--marker); color: var(--red); margin-right: 6px; }
+
+  footer { margin-top: clamp(60px, 9vw, 120px); border-top: 3px solid var(--ink); padding-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; font-size: 1rem; }
+  footer h3 { margin-bottom: .4rem; }
+  footer ul { margin: 0; padding-left: 1.1rem; }
+  @media (max-width: 760px) { footer { grid-template-columns: 1fr; } }
+  .skip { position: absolute; left: -999px; } .skip:focus { left: 8px; top: 8px; background: #fff; padding: 6px; z-index: 5; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#install">Skip to install</a>
+<div class="board">
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow">for anything customers touch</span>
+      <h1>Could you defend it?</h1>
+      <svg class="underline" viewBox="0 0 420 24" aria-hidden="true"><path d="M4 14 C 60 4, 120 22, 190 11 S 330 6, 416 13" fill="none" stroke="#c4321f" stroke-width="5" stroke-linecap="round"/></svg>
+      <p class="lede">Your agent made dozens of decisions you never saw. Some were choices. Many were just its habits. Whiteboard Defense tells you which is which, before someone asks.</p>
+      <p class="quote-note">&ldquo;Why did you do X instead of Y?&rdquo; is a fair question to get on a Tuesday.</p>
+    </div>
+
+    <div id="install">
+      <div class="tray">
+        <div class="tabs" role="tablist" aria-label="Install target">
+          <button role="tab" aria-selected="true" data-tab="sh">macOS / Linux</button>
+          <button role="tab" aria-selected="false" data-tab="ps">Windows</button>
+          <button role="tab" aria-selected="false" data-tab="cc">Claude Code</button>
+          <button role="tab" aria-selected="false" data-tab="cx">Codex</button>
+          <button role="tab" aria-selected="false" data-tab="oc">OpenCode</button>
+        </div>
+        <div class="panel on" id="p-sh"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh<button class="copy">copy</button></pre></div>
+        <div class="panel" id="p-ps"><pre>irm https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.ps1 | iex<button class="copy">copy</button></pre></div>
+        <div class="panel" id="p-cc"><pre>claude plugin marketplace add avestura/whiteboard-defense
+claude plugin install whiteboard-defense@whiteboard-defense<button class="copy">copy</button></pre></div>
+        <div class="panel" id="p-cx"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- codex<button class="copy">copy</button></pre></div>
+        <div class="panel" id="p-oc"><pre>curl -fsSL https://raw.githubusercontent.com/avestura/whiteboard-defense/main/install.sh | sh -s -- opencode<button class="copy">copy</button></pre></div>
+        <small id="hint">One command: installs for every agent it finds on your PATH.</small>
+      </div>
+    </div>
+  </header>
+
+  <section aria-labelledby="what">
+    <h2 id="what">What you get after a task</h2>
+    <p>A short brief, and a full one saved to <code>.whiteboard/</code>. Every decision carries a tag saying who made it. The tag you care about is the red one.</p>
+    <div class="margin">
+      <div class="sheet">
+        <h3>Share-link service for invoices <span class="hand" style="color:var(--ink-soft)">(example)</span></h3>
+        <div class="scroll">
+        <table>
+          <thead><tr><th>Decision</th><th>Choice</th><th>Who</th><th>Not taken</th></tr></thead>
+          <tbody>
+            <tr><td>Link credential</td><td>Bearer token in URL</td><td><span class="tag t-user">USER</span></td><td>Login-gated view</td></tr>
+            <tr><td>Token storage</td><td>SHA-256 hash</td><td><span class="tag t-inf">INFERRED</span></td><td>Plaintext</td></tr>
+            <tr><td>Expiry</td><td>7 days, fixed</td><td><span class="tag t-gue">GUESS</span></td><td>Per-link setting</td></tr>
+            <tr><td class="circled">Revocation</td><td class="circled">None</td><td><span class="tag t-def">DEFAULT</span></td><td>Delete endpoint</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p style="margin-top:1rem"><b>Defend it:</b> <em>Where does this fail?</em> A leaked link can&rsquo;t be cut off before it expires, and every hit costs a full PDF render.</p>
+        <p><b>Paste next time:</b> <code>Every shareable link must be revocable by its creator.</code></p>
+      </div>
+      <div class="note">
+        <svg viewBox="0 0 70 40" aria-hidden="true"><path d="M66 36 C 40 36, 20 24, 6 6 M6 6 l 12 2 M6 6 l 2 12" fill="none" stroke="#c4321f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        nobody asked for this. the agent just never built it.
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="defaults">
+    <h2 id="defaults">Where agents lean on their defaults</h2>
+    <p>Telling a model to &ldquo;avoid a generic look&rdquo; mostly swaps one default for another. Naming the specific pattern works much better. The catalogue ships with entries like these and grows through pull requests.</p>
+    <ul class="rules">
+      <li><span class="id">D-LOGO-01</span><span><b>The monogram.</b> Asked for a logo with no concept, agents reach for one letter, often in a circle, often with a dot. <code>Avoid: a single-letter monogram, letters in circles, dot accents.</code></span></li>
+      <li><span class="id">D-SLIDES-01</span><span><b>The same deck.</b> Click to advance, <code>N</code> for notes, a progress bar, an agenda slide. Fine, unless you never chose it.</span></li>
+      <li><span class="id">D-COLOR-01</span><span><b>Indigo to blue.</b> The gradient that shows up when nobody specifies a palette.</span></li>
+      <li><span class="id">D-ERR-01</span><span><b>Catch, log, continue.</b> A broad <code>try/catch</code> that returns a default and hides the failure from the caller.</span></li>
+      <li><span class="id">D-SEC-02</span><span><b>Homemade sessions.</b> A token in <code>localStorage</code>, default hashing parameters, no stated threat model.</span></li>
+      <li><span class="id">D-SCOPE-01</span><span><b>Extras nobody asked for.</b> A config layer, a settings page, a toggle. More surface to defend.</span></li>
+    </ul>
+    <p class="hand" style="color:var(--blue)">It is not only design. Architecture, naming, errors and security all have defaults.</p>
+  </section>
+
+  <section aria-labelledby="use">
+    <h2 id="use">Using it</h2>
+    <dl class="cmds">
+      <dt>automatic</dt><dd>A 15-line digest after each substantial task. Turn it off with one sentence or <code>"auto": "off"</code>.</dd>
+      <dt>/whiteboard</dt><dd>The full brief for the current work.</dd>
+      <dt>/whiteboard full 142</dt><dd>A brief for a PR, branch, or path that already exists.</dd>
+      <dt>/whiteboard defaults</dt><dd>Only the defaults, each with an <code>Avoid:</code> line to paste into your next prompt.</dd>
+      <dt>/whiteboard quiz</dt><dd>One question at a time, graded against the actual code. This is the part that makes you learn it.</dd>
+    </dl>
+    <p class="hand">Claude Code: <code>/whiteboard-defense:whiteboard</code> &nbsp;·&nbsp; Codex: <code>$whiteboard</code> &nbsp;·&nbsp; OpenCode: <code>/whiteboard</code></p>
+    <p>PoCs, demos and experiments are exempt. Mark a project <code>"tier": "poc"</code> and it stays quiet.</p>
+  </section>
+
+  <section aria-labelledby="limits">
+    <h2 id="limits">What it can&rsquo;t do</h2>
+    <div class="limits">
+      <p><span class="x">x</span>It can&rsquo;t read its own weights. <b>DEFAULT</b> means &ldquo;you didn&rsquo;t specify it and it matches a habitual pattern&rdquo;, not &ldquo;proven bias&rdquo;.</p>
+      <p><span class="x">x</span>The &ldquo;why&rdquo; is reconstructed from the conversation and the diff. Usually right, sometimes wrong. Shaky ones are tagged <b>GUESS</b>.</p>
+      <p><span class="x">x</span>It doesn&rsquo;t replace reading the code that matters. It tells you where to look.</p>
+      <p><span class="x">x</span>Automatic briefs depend on the agent honouring the skill. If one is skipped, run it by hand.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <h3>Credit</h3>
+      <p>The idea is Mitchell Hashimoto&rsquo;s <a href="https://x.com/mitchellh/status/2100249348345057389">whiteboard defense</a>. The &ldquo;name what you don&rsquo;t want&rdquo; advice comes from Anthropic&rsquo;s Opus 5.5 guide. MIT licensed. <a href="https://github.com/avestura/whiteboard-defense">Source and issues on GitHub</a>.</p>
+    </div>
+    <div>
+      <h3>Defaults I avoided on this page</h3>
+      <ul>
+        <li>indigo/purple gradients, dark glow mode</li>
+        <li>Inter and system sans</li>
+        <li>centered hero with two buttons</li>
+        <li>three equal feature cards with icons</li>
+        <li>emoji icons, blob illustrations, a monogram logo</li>
+      </ul>
+      <p class="hand">Used instead: marker colours, a ruled list, one tray.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tabs button');
+  const hints = {
+    sh: 'One command: installs for every agent it finds on your PATH.',
+    ps: 'Same, for PowerShell. Add agent names after it to pick (claude codex opencode).',
+    cc: 'Then run /whiteboard-defense:whiteboard.',
+    cx: 'Installs the skill into ~/.agents/skills. Then run $whiteboard.',
+    oc: 'Installs the skill and a /whiteboard command.'
+  };
+  tabs.forEach(b => b.addEventListener('click', () => {
+    tabs.forEach(t => t.setAttribute('aria-selected', t === b));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.tab));
+    document.getElementById('hint').textContent = hints[b.dataset.tab];
+  }));
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', async () => {
+    const text = btn.parentElement.firstChild.textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'copied'; }
+    catch { btn.textContent = 'select + ctrl-c'; }
+    setTimeout(() => btn.textContent = 'copy', 1600);
+  }));
+</script>
+</body>
+</html>
