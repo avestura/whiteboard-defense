@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=JetBrains+Mono:wght@600&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body { background: #d9d6cb; }
+  /* 1280x640 card; important content stays inside the 80px safe margin. */
+  .board {
+    position: absolute; inset: 24px; border: 14px solid #b9b5a6; border-radius: 6px;
+    box-shadow: 0 0 0 2px #8f8b7c;
+    background:
+      radial-gradient(ellipse 40% 14% at 20% 24%, rgba(0,0,0,.04), transparent 70%),
+      radial-gradient(ellipse 40% 12% at 75% 80%, rgba(0,0,0,.035), transparent 70%),
+      #f3f1e8;
+  }
+  .content { position: absolute; left: 80px; top: 80px; width: 1120px; height: 480px; }
+  .eyebrow { position: absolute; left: 0; top: 4px; font: 700 40px "Caveat", cursive; color: #c4321f; transform: rotate(-2deg); transform-origin: left; }
+  h1 { position: absolute; left: 0; top: 56px; font: 400 96px/1 "Permanent Marker", cursive; color: #1d2327; transform: rotate(-1.2deg); transform-origin: left; white-space: nowrap; }
+  svg { position: absolute; left: 4px; top: 170px; width: 520px; height: 30px; }
+  .sub { position: absolute; left: 0; top: 246px; width: 760px; font: 700 42px/1.15 "Caveat", cursive; color: #4b5359; }
+  .tags { position: absolute; left: 0; top: 372px; display: flex; gap: 18px; }
+  .tag { font: 600 28px "JetBrains Mono", monospace; padding: 2px 14px; border: 3px solid currentColor; border-radius: 4px; transform: rotate(-1.5deg); }
+  .u { color: #1f4fb8; } .i { color: #1c7a43; } .d { color: #c4321f; } .g { color: #b86b00; }
+  .repo { position: absolute; left: 0; bottom: 0; font: 600 26px "JetBrains Mono", monospace; color: #1d2327; }
+  .agents { position: absolute; right: 0; bottom: 0; font: 700 34px "Caveat", cursive; color: #1f4fb8; }
+</style>
+<div class="board"></div>
+<div class="content">
+  <div class="eyebrow">for anything customers touch</div>
+  <h1>Could you defend it?</h1>
+  <svg viewBox="0 0 620 30"><path d="M4 18 C 90 4, 180 28, 280 14 S 490 8, 616 17" fill="none" stroke="#c4321f" stroke-width="7" stroke-linecap="round"/></svg>
+  <div class="sub">Know what your AI agent built, and where it just used its defaults.</div>
+  <div class="tags"><span class="tag u">USER</span><span class="tag i">INFERRED</span><span class="tag d">DEFAULT</span><span class="tag g">GUESS</span></div>
+  <div class="repo">avestura/whiteboard-defense</div>
+  <div class="agents">Claude Code · Codex · OpenCode</div>
+</div>
