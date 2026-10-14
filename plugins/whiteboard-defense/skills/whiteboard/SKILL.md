@@ -1,6 +1,6 @@
 ---
 name: whiteboard
-description: Produces a "whiteboard defense" brief after substantial coding, design, or content work, so the user can explain and defend what was shipped. Lists the decisions made, who made each one (user, inferred, or the agent's default), the alternatives not taken, failure modes, and questions the user should be able to answer. Flags where the agent silently relied on a default (the usual logo, slide-deck format, UI style, library choice, architecture). Use at the end of any substantial task that is, or may become, customer-facing; when the user asks "what did you decide", "what should I know about this", "whiteboard", "defend this", or "quiz me"; or via /whiteboard. Skip for PoCs, demos, and throwaway experiments the user has said they do not need to understand.
+description: Produces a "whiteboard defense" brief after substantial coding, design, or content work, so the user can explain and defend what was shipped. Lists the decisions made, who made each one (user, inferred, or the agent's default), the alternatives not taken, failure modes, and questions the user should be able to answer. Flags where the agent silently relied on a default (the usual logo, slide-deck format, UI style, library choice, architecture). Use at the end of any substantial task that is, or may become, customer-facing; when the user asks "what did you decide", "what should I know about this", "whiteboard", "defend this", or "quiz me"; or via /whiteboard (in Claude Code the skill name is whiteboard-defense:whiteboard, so invoke it with that full name). Skip for PoCs, demos, and throwaway experiments the user has said they do not need to understand.
 ---
 
 # Whiteboard defense
@@ -185,7 +185,7 @@ Be ready to answer: "<the one hardest question>"
 Full brief: run /whiteboard
 ```
 
-Do not write a file in short mode; the last line always points to `/whiteboard`.
+Do not write a file in short mode; the last line always points to `/whiteboard`. In Claude Code, write the command as `/whiteboard-defense:whiteboard` (the plugin prefix is required; the bare `whiteboard` skill name is unknown there), here and in the PoC line above.
 
 ## Saving the brief
 
